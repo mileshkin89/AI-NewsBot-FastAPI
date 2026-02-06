@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     TG_SESSION_NAME: str
     TG_SESSION_DIR: Path = str(BASE_DIR / "sessions")
 
+    # OpenAI  settings
+    OPENAI_API_KEY: str
+    OPENAI_API_MODEL: str = "gpt-3.5-turbo"  # "gpt-4.1-mini"
+    OPENAI_API_MODEL_TEMPERATURE: float = 0.3
+
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
         env_file_encoding="utf-8",

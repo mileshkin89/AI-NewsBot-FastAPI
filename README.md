@@ -26,3 +26,18 @@ You need to obtain _api_id_ and _api_hash_.
 - enter your phone number
 - enter the verification code sent via Telegram
 After successful authorization, a file named _<TG_SESSION_NAME>.session_ will be created and moved in sessions/ directory.
+
+### OpenAI Client Registration
+
+1. Create an OpenAI Account
+Go to https://platform.openai.com/
+
+Sign up or log in to your account
+
+2. Generate an API Key
+
+- Open Dashboard → API Keys
+- Click Create new secret key
+- Copy and securely store the key (it will be shown only once)
+
+3. Add OPENAI_API_KEY in _.env_ file
