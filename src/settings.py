@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     OPENAI_API_MODEL: str = "gpt-3.5-turbo"  # "gpt-4.1-mini"
     OPENAI_API_MODEL_TEMPERATURE: float = 0.3
 
+    TG_TOKEN: str
+
     # Postgresql settings
     POSTGRES_DB: str
     POSTGRES_DB_PORT: int

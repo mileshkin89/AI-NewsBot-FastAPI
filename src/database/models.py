@@ -87,3 +87,19 @@ class Post(Base):
     news_id: Mapped[int] = mapped_column(ForeignKey("news_items.id"), index=True, unique=True)
 
     news: Mapped["NewsItem"] = relationship("NewsItem", back_populates="posts")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    chat_id: Mapped[int] = mapped_column(unique=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    subscribed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+

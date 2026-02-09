@@ -3,12 +3,24 @@ import asyncio
 from apps.news_parser.factory import get_parser
 from apps.news_parser.schemas import NewsItem
 from apps.post_generator.generator import get_post_generator, PostGenerator
+from apps.tg_bot import start
+from apps.tg_bot.menu import set_commands
+from apps.tg_bot.publisher import PostPublisher
 
-from database.repository import get_sources
+from database.repository import get_sources, get_users
+from services.tg_bot import dp, bot
 
 
 async def main():
+    await set_commands()
+    dp.include_router(start.router)
+
     sources = await get_sources()
+    users = await get_users()
+
+    await asyncio.sleep(20)
+
+    publishers = [PostPublisher(chat_id=user.chat_id) for user in users]
 
     while True:
         for source in sources:
@@ -36,7 +48,14 @@ async def main():
                 print("generated_text: ", generated_text)
                 print("=" * 40)
 
-        await asyncio.sleep(600)
+                for publisher in publishers:
+                    await publisher.publish(
+                        text = f"source: {source.name}\n"
+                        f"news text: {news_item.raw_text}\n"
+                        f"generated_text:  {generated_text}"
+                    )
+
+        await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
