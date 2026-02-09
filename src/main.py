@@ -1,57 +1,13 @@
 import asyncio
 
-from sqlalchemy.exc import IntegrityError
-
 from apps.news_parser.factory import get_parser
 from apps.news_parser.schemas import NewsItem
 from apps.post_generator.generator import get_post_generator, PostGenerator
-from database.db import get_db
-from database.enams import SourceType
-from database.models import Source
+
 from database.repository import get_sources
 
 
-async def populate_db() -> None:
-    async with get_db() as db:
-        sources = [
-            Source(
-                type=SourceType("tg"),
-                name="Андрій Смолій. Новини",
-                url="smolii_ukraine",
-                enabled=True,
-            ),
-            Source(
-                type=SourceType("tg"),
-                name="Creaitors. AI news",
-                url="creaitors_ua",
-                enabled=True,
-            ),
-            Source(
-                type=SourceType("tg"),
-                name="Алексей Руденко . Криптоинвестор",
-                url="AlexRich2018",
-                enabled=True,
-            ),
-            Source(
-                type=SourceType("site"),
-                name="Python Blog",
-                url="https://blog.python.org/",
-                title_selector="h3.post-title",
-                enabled=True,
-            ),
-        ]
-
-        db.add_all(sources)
-
-        try:
-            await db.commit()
-        except IntegrityError as e:
-            await db.rollback()
-            return
-
-
 async def main():
-    await populate_db()
     sources = await get_sources()
 
     while True:
@@ -80,7 +36,7 @@ async def main():
                 print("generated_text: ", generated_text)
                 print("=" * 40)
 
-        await asyncio.sleep(60)
+        await asyncio.sleep(600)
 
 
 if __name__ == "__main__":

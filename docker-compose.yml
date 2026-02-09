@@ -5,6 +5,7 @@ services:
     volumes:
       - .:/app
       - ./sessions:/app/sessions
+      - ./data:/app/data
     ports:
       - "8000:8000"
     networks:

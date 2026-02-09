@@ -23,7 +23,8 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_HOST: str
 
-
+    # Sources: CSV in the data directory
+    SOURCES_CSV_PATH: Path = BASE_DIR / "data" / "sources.csv"
 
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
@@ -44,4 +45,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

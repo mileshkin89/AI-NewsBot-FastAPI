@@ -1,0 +1,5 @@
+type,name,url,title_selector,enabled
+tg,Андрій Смолій. Новини,smolii_ukraine,,true
+tg,Creaitors. AI news,creaitors_ua,,true
+tg,Алексей Руденко . Криптоинвестор,AlexRich2018,,true
+site,Python Blog,https://blog.python.org/,h3.post-title,true
