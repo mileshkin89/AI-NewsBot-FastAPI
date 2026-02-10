@@ -36,6 +36,10 @@ restart:  ## Restart services (down, build, up)
 # Migration Commands
 # ============================================
 
+create-migration: ## Create Alembic migration (use: make create-migration msg="add users table")
+	@test -n "$(msg)" || (echo "Usage: make create-migration msg=\"your message\"" && exit 1)
+	@ENV_FILE=$(ENV_FILE) sh commands/create_migration.sh "$(msg)"
+
 migrate: ## Apply Alembic migrations
 	@echo "========================================="
 	@echo "Applying database migrations..."
