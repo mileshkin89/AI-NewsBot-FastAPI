@@ -4,7 +4,7 @@ from sqlalchemy import DateTime, String, Boolean, ForeignKey, func, UniqueConstr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SAEnum
 
-from database.enams import SourceType, PostStatus, NewsItemStatus
+from database.enams import SourceType, PostStatus, NewsItemStatus, UsersPostStatus
 
 
 class Base(DeclarativeBase):
@@ -103,3 +103,30 @@ class User(Base):
     )
 
 
+class UsersPost(Base):
+    __tablename__ = "user_post"
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "post_id", name="uq_user_post"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    status: Mapped[UsersPostStatus] = mapped_column(
+        SAEnum(UsersPostStatus, native_enum=False),
+        default=UsersPostStatus.NEW,
+        nullable=False,
+    )
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE")
+    )
+    post_id: Mapped[int] = mapped_column(
+        ForeignKey("posts.id", ondelete="CASCADE")
+    )
+
+    user: Mapped["User"] = relationship(
+        back_populates="users_posts"
+    )
+    post: Mapped["Post"] = relationship(
+        back_populates="users_posts"
+    )

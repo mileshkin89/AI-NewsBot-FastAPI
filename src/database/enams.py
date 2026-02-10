@@ -18,3 +18,8 @@ class PostStatus(str, Enum):
     GENERATED = "generated"
     FAILED = "failed"
 
+
+class UsersPostStatus(str, Enum):
+    NEW = "new"
+    PUBLISHED = "published"
+    FAILED = "failed"
