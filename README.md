@@ -41,3 +41,9 @@ Sign up or log in to your account
 - Copy and securely store the key (it will be shown only once)
 
 3. Add OPENAI_API_KEY in _.env_ file
+
+
+### Telegram Bot API Key
+
+Open [@BotFather](https://t.me/BotFather) in Telegram, send `/newbot`, and follow the prompts to create your bot and get the token. Put the token in your `.env` as `TG_TOKEN`.
+

@@ -1,5 +1,12 @@
 from apps.post_generator.prompts import SYSTEM_PROMPT, USER_PROMPT
 from services.openai import OpenAIClient, get_open_ai_client
+from database.repository import NewsRepository
+
+
+async def get_post_generator() -> 'PostGenerator':
+    """Return a PostGenerator wired to the shared OpenAI client."""
+    client: OpenAIClient = get_open_ai_client
+    return PostGenerator(client)
 
 
 class PostGenerator:
@@ -42,6 +49,25 @@ class PostGenerator:
         return response.output_text.strip()
 
 
-async def get_post_generator() -> PostGenerator:
-    client: OpenAIClient = get_open_ai_client
-    return PostGenerator(client)
+class PostGenerationService:
+    """
+    Orchestrates post text generation: load pending posts from the repo,
+    generate text via the given generator, and persist results back.
+    """
+
+    def __init__(self, repo: NewsRepository, generator: PostGenerator):
+        """
+        Args:
+            repo: Repository for loading pending posts and saving results.
+            generator: Text generator (e.g. PostGenerator) for raw text -> post text.
+        """
+        self._repo = repo
+        self._generator = generator
+
+    async def process_pending_posts(self) -> None:
+        """Fetch posts with status NEW, generate text for each, save and set status GENERATED."""
+        pending = await self._repo.get_posts_pending_generation()
+
+        for post_id, raw_text in pending:
+            text = await self._generator.generate_text(raw_text)
+            await self._repo.mark_post_generated(post_id, text)
