@@ -1,6 +1,9 @@
 from openai import AsyncOpenAI
 
+from logging_config import get_logger
 from settings import settings
+
+logger = get_logger(__name__)
 
 
 class OpenAIClient:
@@ -20,6 +23,7 @@ class OpenAIClient:
         self._client = AsyncOpenAI(api_key=openai_api_key)
         self.model = model
         self.temperature = temperature
+        logger.debug(f"OpenAI client initialized: model={model}, temperature={temperature}")
 
     async def create_response(
             self,
@@ -27,12 +31,15 @@ class OpenAIClient:
             input: list[dict],
             max_output_tokens: int,
     ):
-        return await self._client.responses.create(
+        logger.debug(f"Creating OpenAI response: model={self.model}, max_output_tokens={max_output_tokens}")
+        response = await self._client.responses.create(
             model=self.model,
             temperature=self.temperature,
             input=input,
             max_output_tokens=max_output_tokens,
         )
+        logger.debug("OpenAI response created successfully")
+        return response
 
 
 get_open_ai_client = OpenAIClient(

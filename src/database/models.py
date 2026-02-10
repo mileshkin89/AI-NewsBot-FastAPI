@@ -88,6 +88,12 @@ class Post(Base):
 
     news: Mapped["NewsItem"] = relationship("NewsItem", back_populates="posts")
 
+    users_posts: Mapped[list["UsersPost"]] = relationship(
+        "UsersPost",
+        back_populates="post",
+        cascade="all, delete-orphan",
+    )
+
 
 class User(Base):
     __tablename__ = "users"
@@ -100,6 +106,12 @@ class User(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
+    )
+
+    users_posts: Mapped[list["UsersPost"]] = relationship(
+        "UsersPost",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
 

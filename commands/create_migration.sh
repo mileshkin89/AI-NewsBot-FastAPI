@@ -1,7 +1,6 @@
 #!/usr/bin/env sh
 set -e
 
-# Переход в корень проекта (для вызова docker compose)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
@@ -15,7 +14,6 @@ if [ -z "$MSG" ]; then
     exit 1
 fi
 
-# Остановка и отключение контейнеров при выходе из скрипта (успех или ошибка)
 cleanup() {
     echo "Stopping containers..."
     docker compose --env-file "$ENV_FILE" stop web db 2>/dev/null || true
