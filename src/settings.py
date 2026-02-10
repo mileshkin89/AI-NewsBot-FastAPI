@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Sources: CSV in the data directory
     SOURCES_CSV_PATH: Path = BASE_DIR / "data" / "sources.csv"
 
+    # Path to application logs
+    PATH_TO_LOGS: Path = BASE_DIR / "logs"
+
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
         env_file_encoding="utf-8",
