@@ -11,7 +11,7 @@ from main_handler import (
     process_users_posts,
 )
 from logging_config import get_logger
-from services.tg_bot import dp, bot
+from infrastructure.tg_bot import dp, bot
 
 logger = get_logger(__name__)
 

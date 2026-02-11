@@ -1,5 +1,5 @@
 from apps.post_generator.prompts import SYSTEM_PROMPT, USER_PROMPT
-from services.openai import OpenAIClient, get_open_ai_client
+from infrastructure.openai import OpenAIClient, get_open_ai_client
 from database.repository import NewsRepository
 
 

@@ -36,7 +36,6 @@ async def parse_news_items():
 
         logger.debug("Parsing cycle finished, sleeping 60s")
 
-
         await asyncio.sleep(60)
 
 
@@ -50,6 +49,7 @@ async def deduplicate_news_items():
             logger.info(f"Deduplicating {len(items)} new items")
         for item in items:
             await deduplicator.deduplicate(news_item_id=item.id)
+
         await asyncio.sleep(20)
 
 
@@ -61,6 +61,7 @@ async def create_posts():
             logger.info(f"Creating posts for {len(items)} deduplicated items")
         for item in items:
             await repo.create_post(item)
+
         await asyncio.sleep(20)
 
 
@@ -72,6 +73,7 @@ async def generate_posts():
 
     while True:
         await service.process_pending_posts()
+
         await asyncio.sleep(20)
 
 
@@ -80,11 +82,13 @@ async def process_users_posts():
     while True:
         users = await repo.get_users()
         posts = await repo.get_generated_posts()
+
         if users and posts:
             logger.info(f"Assigning {len(posts)} posts to {len(users)} users")
         for user in users:
             for post in posts:
                 await repo.create_users_post(user, post)
+
         await asyncio.sleep(20)
 
 

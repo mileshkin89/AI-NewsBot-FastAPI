@@ -2,7 +2,7 @@
 from telethon.tl.types import Message
 from apps.news_parser.base import BaseParser
 from apps.news_parser.schemas import RawNews, NewsItem
-from services.telethon import get_telegram_client
+from infrastructure.telethon import get_telegram_client
 
 
 class TelegramParser(BaseParser):

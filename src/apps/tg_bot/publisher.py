@@ -1,6 +1,6 @@
 from aiogram import Bot
 
-from services.tg_bot import bot
+from infrastructure.tg_bot import bot
 
 
 class PostPublisher:
