@@ -26,8 +26,9 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_HOST: str
 
-    # Sources: CSV in the data directory
+    # Data: CSV files in the data directory
     SOURCES_CSV_PATH: Path = BASE_DIR / "data" / "sources.csv"
+    CATEGORIES_CSV_PATH: Path = BASE_DIR / "data" / "categories.csv"
 
     # Path to application logs
     PATH_TO_LOGS: Path = BASE_DIR / "logs"

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, Boolean, ForeignKey, func, UniqueConstraint
+from sqlalchemy import DateTime, String, Boolean, ForeignKey, func, UniqueConstraint, Table, Column
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SAEnum
 
@@ -9,6 +9,57 @@ from database.enams import SourceType, PostStatus, NewsItemStatus, UsersPostStat
 
 class Base(DeclarativeBase):
     pass
+
+
+source_category = Table(
+    "source_category",
+    Base.metadata,
+    Column(
+        "source_id",
+        ForeignKey("sources.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "category_id",
+        ForeignKey("categories.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
+user_category = Table(
+    "user_category",
+    Base.metadata,
+    Column(
+        "user_id",
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "category_id",
+        ForeignKey("categories.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    sources: Mapped[list["Source"]] = relationship(
+        secondary=source_category,
+        back_populates="categories",
+        lazy="selectin",
+    )
+
+    users: Mapped[list["User"]] = relationship(
+        secondary=user_category,
+        back_populates="categories",
+        lazy="selectin",
+    )
 
 
 class Source(Base):
@@ -25,6 +76,12 @@ class Source(Base):
         "NewsItem",
         back_populates="source",
         cascade="all, delete-orphan"
+    )
+
+    categories: Mapped[list["Category"]] = relationship(
+        secondary=source_category,
+        back_populates="sources",
+        lazy="selectin",
     )
 
 
@@ -112,6 +169,12 @@ class User(Base):
         "UsersPost",
         back_populates="user",
         cascade="all, delete-orphan",
+    )
+
+    categories: Mapped[list["Category"]] = relationship(
+        secondary=user_category,
+        back_populates="users",
+        lazy="selectin",
     )
 
 

@@ -1,9 +1,11 @@
+"""Bot command menu: registers /start and /categories in Telegram UI."""
+
 from aiogram.types import BotCommand, BotCommandScopeDefault
 
 from infrastructure.tg_bot import bot
 
 
-async def set_commands():
+async def set_commands() -> None:
     """
     Registers a predefined list of bot commands with descriptions.
 
@@ -15,6 +17,7 @@ async def set_commands():
     """
     commands = [
         BotCommand(command='start', description='Bot start menu'),
+        BotCommand(command='categories', description='Select news categories'),
         ]
 
     await bot.set_my_commands(commands, BotCommandScopeDefault())

@@ -20,5 +20,5 @@ Text cleanup:
 """
 
 USER_PROMPT = """
-Return the meaning of the post in 2 sentences and write them in uppercase.
+Return the meaning of the post in 2 sentences.
 """

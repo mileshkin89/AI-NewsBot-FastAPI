@@ -129,7 +129,11 @@ async def publish_posts():
         for u_p in users_posts:
             publisher = PostPublisher(chat_id=u_p.user.chat_id)
             try:
-                await publisher.publish(text=u_p.post.generated_text)
+                await publisher.publish(text=
+                                        f"Source = {u_p.post.news.source.name}\n\n"
+                                        f"raw text = {u_p.post.news.raw_text}\n\n" 
+                                        f"generated text = {u_p.post.generated_text}")
+
                 await repo.mark_users_post_published(u_p)
                 logger.debug(f"Published post for user chat_id={u_p.user.chat_id}")
             except Exception as e:

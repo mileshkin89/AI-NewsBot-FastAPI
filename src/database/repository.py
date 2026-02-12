@@ -200,7 +200,7 @@ class NewsRepository:
                 .where(UsersPost.status == UsersPostStatus.NEW)
                 .options(
                     selectinload(UsersPost.user),
-                    selectinload(UsersPost.post),
+                    selectinload(UsersPost.post).selectinload(Post.news).selectinload(NewsItem.source),
                 )
             )
             posts = result.scalars().all()
