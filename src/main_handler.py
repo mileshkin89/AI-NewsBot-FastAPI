@@ -5,7 +5,10 @@ from apps.news_parser.factory import get_parser
 from apps.post_generator.generator import get_post_generator, PostGenerationService
 from apps.tg_bot.publisher import PostPublisher
 from database.repository import NewsRepository
+from apps.news_deduplicator.news_seen_cache import NewsSeenCache
+from infrastructure.redis_client import get_redis_client
 from logging_config import get_logger
+from settings import settings
 
 logger = get_logger(__name__)
 repo = NewsRepository()
@@ -23,16 +26,38 @@ async def parse_news_items():
         except Exception as e:
             logger.exception(f"Parsing cycle error in `get_sources`: {e}")
 
+        cache: NewsSeenCache | None = None
+        try:
+            redis = await get_redis_client()
+            cache = NewsSeenCache(redis)
+        except Exception as e:
+            logger.warning(f"Redis cache unavailable, using DB only: {e}")
+
         for source in sources:
+            news_items = []
+
             try:
-                parser = get_parser(source, limit=1)
+                parser = get_parser(source, limit=settings.NEWS_PARSE_LIMIT)
                 news_items = await parser.parse()
-                for item in news_items:
-                    await repo.create_news_item(item, source)
-                if news_items:
-                    logger.info(f"Parsed {len(news_items)} items from source: {source}")
             except Exception as e:
                 logger.exception(f"Parse error for source {source.name} ({source.type}): {e}")
+
+            created = 0
+            for item in news_items:
+                if cache is not None:
+                    if await cache.is_seen(source.id, item.title, item.raw_text, item.url, item.source_message_id):
+                        logger.debug(f"///Skipping duplicate item: {item.title}")
+                        continue
+
+                await repo.create_news_item(item, source)
+                if cache is not None:
+                    await cache.mark_seen(source.id, item.title, item.raw_text, item.url, item.source_message_id)
+                created += 1
+
+            if news_items:
+                logger.info(
+                    f"Parsed {len(news_items)} items from source {source.url}, created {created}"
+                )
 
         logger.debug("Parsing cycle finished, sleeping 60s")
 
@@ -88,6 +113,8 @@ async def process_users_posts():
         for user in users:
             for post in posts:
                 await repo.create_users_post(user, post)
+
+        await repo.mark_posts_processed(posts)
 
         await asyncio.sleep(20)
 

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     TG_API_HASH: str
     TG_SESSION_NAME: str
     TG_SESSION_DIR: Path = str(BASE_DIR / "sessions")
+    NEWS_PARSE_LIMIT: int = 10
 
     # OpenAI  settings
     OPENAI_API_KEY: str
@@ -31,6 +32,11 @@ class Settings(BaseSettings):
     # Path to application logs
     PATH_TO_LOGS: Path = BASE_DIR / "logs"
 
+    # Redis
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DB: int
+
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
         env_file_encoding="utf-8",
@@ -47,6 +53,11 @@ class Settings(BaseSettings):
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
             f"{self.POSTGRES_HOST}:{self.POSTGRES_DB_PORT}/{self.POSTGRES_DB}"
         )
+
+    @property
+    def redis_url(self) -> str:
+        """Return full Redis connection URL."""
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
 
 settings = Settings()

@@ -22,6 +22,7 @@ class BaseParser(ABC):
             published_at=raw.published_at,
             url=raw.url,
             raw_text=raw_text,
+            source_message_id=raw.source_message_id,
         )
 
     async def parse(self) -> List[NewsItem]:

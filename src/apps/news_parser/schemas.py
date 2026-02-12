@@ -8,6 +8,7 @@ class RawNews(BaseModel):
     url: str
     source: str
     published_at: datetime | None
+    source_message_id: int | None = None 
 
 
 class NewsItem(BaseModel):
@@ -16,3 +17,4 @@ class NewsItem(BaseModel):
     source: str
     published_at: datetime | None
     raw_text: str | None
+    source_message_id: int | None = None 

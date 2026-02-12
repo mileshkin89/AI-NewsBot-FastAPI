@@ -16,6 +16,7 @@ class NewsItemStatus(str, Enum):
 class PostStatus(str, Enum):
     NEW = "new"
     GENERATED = "generated"
+    PROCESSED = "processed"
     FAILED = "failed"
 
 

@@ -82,7 +82,6 @@ class NewsRepository:
         logger.debug(f"Fetched {len(items)} deduplicated items")
         return items
 
-
     # ---------- Posts ----------
     async def create_post(self, item: NewsItem) -> None:
         """Create a post for the news item and set item status to PROCESSED."""
@@ -98,6 +97,12 @@ class NewsRepository:
             except IntegrityError:
                 await db.rollback()
                 logger.warning(f"Failed to create post for news_item_id={item.id} (integrity error)")
+                await db.execute(
+                    update(NewsItem)
+                    .where(NewsItem.id == item.id)
+                    .values(status=NewsItemStatus.PROCESSED)
+                )
+                await db.commit()
 
 
     async def get_new_posts(self) -> list[Post]:
@@ -154,6 +159,21 @@ class NewsRepository:
             post.status = PostStatus.GENERATED
             await db.commit()
         logger.debug(f"Marked post as generated: post_id={post_id}")
+
+
+    async def mark_posts_processed(self, posts: list[Post]) -> None:
+        """Mark posts as processed."""
+
+        post_ids = [p.id for p in posts]
+
+        async with get_db() as db:
+            await db.execute(
+                update(Post)
+                .where(Post.id.in_(post_ids))
+                .values(status=PostStatus.PROCESSED)
+            )
+            await db.commit()
+        logger.debug(f"Marked {len(posts)} posts as processed")
 
 
     # ---------- UsersPost ----------

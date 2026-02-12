@@ -1,4 +1,3 @@
-
 from telethon.tl.types import Message
 from apps.news_parser.base import BaseParser
 from apps.news_parser.schemas import RawNews, NewsItem
@@ -26,6 +25,7 @@ class TelegramParser(BaseParser):
                 source=self.source_name,
                 url=f"https://t.me/{self.channel}/{msg.id}",
                 published_at=msg.date,
+                source_message_id=msg.id,
             )
             for msg in messages
             if isinstance(msg, Message) and msg.text
