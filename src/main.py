@@ -1,4 +1,7 @@
 import asyncio
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
 
 from apps.tg_bot import start
 from apps.tg_bot.menu import set_commands
@@ -56,5 +59,21 @@ async def main():
         logger.info("Bot stopped")
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    asyncio.create_task(main())
+    yield
+
+
+app = FastAPI(
+    title="AI_news_bot",
+    description="AI news telegram bot",
+    lifespan=lifespan
+)
+
+
+@app.get("/", tags=["root"])
+async def read_root():
+    return {"message": "AI bot is running"}
+
+
