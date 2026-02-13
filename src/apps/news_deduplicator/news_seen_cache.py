@@ -2,7 +2,10 @@
 Cache of already-seen news items per source.
 Checked before DB write to avoid redundant IntegrityError and DB round-trips.
 """
+from __future__ import annotations
+
 import hashlib
+from typing import Any, Sequence
 
 from redis.asyncio import Redis
 
@@ -66,5 +69,57 @@ class NewsSeenCache:
         key = _cache_key(source_id)
         fp = _item_fingerprint(source_message_id, title, raw_text, url)
         await self._redis.sadd(key, fp)
+        if await self._redis.ttl(key) == -1:
+            await self._redis.expire(key, KEY_TTL_SEC)
+
+    async def filter_unseen(
+        self,
+        source_id: int,
+        items: Sequence[Any],
+    ) -> list[Any]:
+        """
+        Return only items whose fingerprint is not in cache (batch via pipeline).
+        Each item must have: title, raw_text, url, source_message_id (optional).
+        """
+        if not items:
+            return []
+        key = _cache_key(source_id)
+        pipes: list[tuple[Any, str]] = []
+        for item in items:
+            fp = _item_fingerprint(
+                getattr(item, "source_message_id", None),
+                getattr(item, "title", None),
+                getattr(item, "raw_text", None),
+                getattr(item, "url", ""),
+            )
+            pipes.append((item, fp))
+        async with self._redis.pipeline(transaction=False) as pipe:
+            for _, fp in pipes:
+                pipe.sismember(key, fp)
+            seen_flags = await pipe.execute()
+        return [item for (item, _), seen in zip(pipes, seen_flags) if not seen]
+
+    async def mark_seen_batch(
+        self,
+        source_id: int,
+        items: Sequence[Any],
+    ) -> None:
+        """
+        Add fingerprints of all items to cache in one pipeline.
+        Each item must have: title, raw_text, url, source_message_id (optional).
+        """
+        if not items:
+            return
+        key = _cache_key(source_id)
+        fps = [
+            _item_fingerprint(
+                getattr(item, "source_message_id", None),
+                getattr(item, "title", None),
+                getattr(item, "raw_text", None),
+                getattr(item, "url", ""),
+            )
+            for item in items
+        ]
+        await self._redis.sadd(key, *fps)
         if await self._redis.ttl(key) == -1:
             await self._redis.expire(key, KEY_TTL_SEC)

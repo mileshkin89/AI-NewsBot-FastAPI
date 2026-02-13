@@ -39,8 +39,8 @@ class NewsRepository:
 
 
     # ---------- NewsItems ----------
-    async def create_news_item(self, item: NewsItem, source: Source) -> None:
-        """Persist a news item for the given source; rollback on duplicate."""
+    async def create_news_item(self, item: NewsItem, source: Source) -> int:
+        """Persist a news item for the given source; rollback on duplicate. Returns 1 if created, 0 if duplicate."""
         async with get_db() as db:
             news_item = NewsItem(
                 title=item.title,
@@ -54,9 +54,42 @@ class NewsRepository:
             try:
                 await db.commit()
                 logger.debug(f"Created news item: {item.title[:50]}... (source_id={source.id})")
+                return 1
             except IntegrityError:
                 await db.rollback()
                 logger.debug(f"Duplicate news item skipped: {item.url}")
+                return 0
+
+    async def create_news_items_batch(self, items: list, source: Source) -> int:
+        """
+        Persist multiple news items for the given source in one transaction.
+        Each item must have: title, url, raw_text, published_at.
+        On bulk IntegrityError, falls back to inserting one by one.
+        Returns the number of actually created items.
+        """
+        if not items:
+            return 0
+        async with get_db() as db:
+            for item in items:
+                db.add(
+                    NewsItem(
+                        title=item.title,
+                        url=item.url,
+                        raw_text=item.raw_text,
+                        published_at=item.published_at,
+                        source_id=source.id,
+                    )
+                )
+            try:
+                await db.commit()
+                logger.debug(f"Created {len(items)} news items in batch (source_id={source.id})")
+                return len(items)
+            except IntegrityError:
+                await db.rollback()
+        created = 0
+        for item in items:
+            created += await self.create_news_item(item, source)
+        return created
 
 
     async def get_new_items(self) -> list[NewsItem]:

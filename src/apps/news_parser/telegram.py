@@ -48,6 +48,16 @@ class TelegramParser(BaseParser):
                 e,
             )
             return []
+        except ValueError as e:
+            if "username" in str(e).lower() or "No user" in str(e):
+                logger.warning(
+                    "Telegram channel username not found for source %r (channel=%r): %s",
+                    self.source_name,
+                    self.channel,
+                    e,
+                )
+                return []
+            raise
         except telethon_errors.FloodWaitError as e:
             logger.warning(
                 "Telegram rate limit for source %r (channel=%r), wait %s s: %s",

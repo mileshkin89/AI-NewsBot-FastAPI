@@ -14,6 +14,31 @@ logger = get_logger(__name__)
 repo = NewsRepository()
 
 
+async def _process_one_source(source, cache: NewsSeenCache | None) -> None:
+    """Parse one source, filter unseen via cache, insert batch, mark batch in cache."""
+    news_items = []
+    try:
+        parser = get_parser(source, limit=settings.NEWS_PARSE_LIMIT)
+        news_items = await parser.parse()
+    except Exception as e:
+        logger.exception(f"Parse error for source {source.name} ({source.type}): {e}")
+        return
+
+    if cache is not None:
+        to_create = await cache.filter_unseen(source.id, news_items)
+    else:
+        to_create = news_items
+
+    created = await repo.create_news_items_batch(to_create, source)
+    if cache is not None and to_create:
+        await cache.mark_seen_batch(source.id, to_create)
+
+    if news_items:
+        logger.info(
+            f"Parsed {len(news_items)} items from source {source.url}, created {created}"
+        )
+
+
 async def parse_news_items():
     logger.info("Starting parsing cycle task")
 
@@ -33,31 +58,7 @@ async def parse_news_items():
         except Exception as e:
             logger.warning(f"Redis cache unavailable, using DB only: {e}")
 
-        for source in sources:
-            news_items = []
-
-            try:
-                parser = get_parser(source, limit=settings.NEWS_PARSE_LIMIT)
-                news_items = await parser.parse()
-            except Exception as e:
-                logger.exception(f"Parse error for source {source.name} ({source.type}): {e}")
-
-            created = 0
-            for item in news_items:
-                if cache is not None:
-                    if await cache.is_seen(source.id, item.title, item.raw_text, item.url, item.source_message_id):
-                        logger.debug(f"///Skipping duplicate item: {item.title}")
-                        continue
-
-                await repo.create_news_item(item, source)
-                if cache is not None:
-                    await cache.mark_seen(source.id, item.title, item.raw_text, item.url, item.source_message_id)
-                created += 1
-
-            if news_items:
-                logger.info(
-                    f"Parsed {len(news_items)} items from source {source.url}, created {created}"
-                )
+        await asyncio.gather(*[_process_one_source(source, cache) for source in sources])
 
         logger.debug("Parsing cycle finished, sleeping 60s")
 
