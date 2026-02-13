@@ -95,7 +95,7 @@ class NewsItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(250))
     url: Mapped[str] = mapped_column(String(1000), unique=True)
-    raw_text: Mapped[str] = mapped_column(String(2000))
+    raw_text: Mapped[str] = mapped_column(String(4100))
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     is_duplicate: Mapped[bool] = mapped_column(Boolean, default=False)
