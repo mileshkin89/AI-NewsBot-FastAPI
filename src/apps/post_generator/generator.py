@@ -1,4 +1,4 @@
-from apps.post_generator.prompts import SYSTEM_PROMPT, USER_PROMPT
+from apps.post_generator.prompt_loader import get_prompts
 from infrastructure.openai import OpenAIClient, get_open_ai_client
 from database.repository import NewsRepository
 
@@ -16,8 +16,8 @@ class PostGenerator:
     async def generate_text(
             self,
             input_text: str,
-            prompt: str = USER_PROMPT,
-            system_prompt: str | None = SYSTEM_PROMPT,
+            prompt: str | None = None,
+            system_prompt: str | None = None,
             max_output_tokens: int = 800,
     ) -> str:
         """
@@ -32,6 +32,9 @@ class PostGenerator:
         Returns:
             str: Generated text.
         """
+        sys_prompt, usr_prompt = get_prompts()
+        prompt = prompt if prompt is not None else usr_prompt
+        system_prompt = system_prompt if system_prompt is not None else sys_prompt
 
         user_content = (
             f"PROMPT:\n{prompt}\n\n"

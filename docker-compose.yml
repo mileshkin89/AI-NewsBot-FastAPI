@@ -6,6 +6,7 @@ services:
       - .:/app
       - ./sessions:/app/sessions
       - ./data:/app/data
+      - ./prompts:/app/prompts
       - ./logs:/app/logs
     ports:
       - "8000:8000"

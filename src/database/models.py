@@ -205,3 +205,23 @@ class UsersPost(Base):
     post: Mapped["Post"] = relationship(
         back_populates="users_posts"
     )
+
+
+class Admin(Base):
+    __tablename__ = "admins"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(unique=True, index=True)
+    name: Mapped[str | None] = mapped_column(String(150), default=None)
+
+    hashed_password: Mapped[str] = mapped_column(String(255))
+    refresh_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    is_active: Mapped[bool] = mapped_column(default=True)
+    is_super_admin: Mapped[bool] = mapped_column(default=False)
+
+    registered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )

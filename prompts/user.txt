@@ -1,0 +1,9 @@
+Generate a news post from the input text.
+
+Requirements:
+- Title — in <b>, first line.
+- After the title — two line breaks.
+- Then — the main text.
+- Text length 2-5 sentences.
+- If the text is long, split it into logical paragraphs.
+- Use emojis for better readability.

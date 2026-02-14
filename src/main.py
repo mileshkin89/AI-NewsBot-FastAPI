@@ -3,6 +3,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from apps.api.admin.routes import admin_router
+from apps.api.apps_api.routes.categories import category_router
+from apps.api.apps_api.routes.posts import post_router
+from apps.api.apps_api.routes.sources import source_router
+from apps.api.apps_api.routes.users import user_router
+from apps.api.auth.routes import auth_router
 from apps.tg_bot import start
 from apps.tg_bot.menu import set_commands
 from main_handler import (
@@ -15,6 +21,7 @@ from main_handler import (
 )
 from logging_config import get_logger
 from infrastructure.tg_bot import dp, bot
+from apps.post_generator.prompt_loader import load_prompts
 
 logger = get_logger(__name__)
 
@@ -34,6 +41,9 @@ async def main():
     await set_commands()
     dp.include_router(start.router)
     logger.info("Setting bot commands and routers")
+
+    load_prompts()
+    logger.info("Prompts from files loaded")
 
     tasks = [
         asyncio.create_task(parse_news_items()),
@@ -71,9 +81,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+app.include_router(auth_router)
+app.include_router(admin_router)
+app.include_router(category_router)
+app.include_router(source_router)
+app.include_router(user_router)
+app.include_router(post_router)
 
-@app.get("/", tags=["root"])
+
+@app.get("/", tags=["Root"])
 async def read_root():
     return {"message": "AI bot is running"}
-
-

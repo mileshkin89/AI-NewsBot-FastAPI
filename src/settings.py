@@ -32,11 +32,21 @@ class Settings(BaseSettings):
 
     # Path to application logs
     PATH_TO_LOGS: Path = BASE_DIR / "logs"
+    # Path to prompts
+    PATH_TO_PROMPTS: Path = BASE_DIR / "prompts"
 
     # Redis
     REDIS_HOST: str
     REDIS_PORT: int
     REDIS_DB: int
+
+    PASSWORD_HASH_SCHEME: str = "argon2"
+
+    SECRET_KEY: str
+    REFRESH_SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_DAYS: int
 
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
