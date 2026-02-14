@@ -11,7 +11,7 @@ from apps.api.auth.dependencies import (
     pwd_context,
     superadmin_required,
 )
-from database.db import get_db
+from database.db import get_db_depends
 from database.models import Admin
 
 from .schemas import AdminCreate, AdminListResponse, AdminResponse
@@ -28,7 +28,7 @@ admin_router = APIRouter(tags=["Admins"])
     description="Retrieve all admin users. Requires superadmin role.",
 )
 async def get_admins(
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_depends),
 ) -> AdminListResponse:
     """Return list of all admin users."""
     stmt = select(Admin).order_by(Admin.id)
@@ -47,7 +47,7 @@ async def get_admins(
 )
 async def create_admin(
     admin: AdminCreate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_depends),
 ) -> Admin:
     """Create a new admin user."""
     existing = await get_user_by_email(admin.email, db)
@@ -81,7 +81,7 @@ async def create_admin(
 )
 async def deactivate_admin(
     admin_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_depends),
 ) -> None:
     """Deactivate an admin user."""
     admin = await get_user_by_id(admin_id, db)

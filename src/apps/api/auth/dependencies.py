@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.db import get_db
+from database.db import get_db_depends
 from database.models import Admin
 from settings import settings
 
@@ -19,7 +19,7 @@ pwd_context = CryptContext(schemes=[settings.PASSWORD_HASH_SCHEME], deprecated="
 
 async def get_current_user(
         token: str = Depends(oauth2_scheme),
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_db_depends)
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -45,7 +45,7 @@ async def get_current_user(
 
 async def get_user_by_email(
         email: str,
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_db_depends)
 ) -> Admin | None:
     stmt = select(Admin).where(Admin.email == email)
     result = await db.execute(stmt)
@@ -54,7 +54,7 @@ async def get_user_by_email(
 
 async def get_user_by_id(
         user_id: int,
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_db_depends)
 ) -> Admin | None:
     stmt = select(Admin).where(Admin.id == user_id)
     result = await db.execute(stmt)
@@ -64,7 +64,7 @@ async def get_user_by_id(
 async def authenticate_user(
         email: str,
         password: str,
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_db_depends)
 ):
     user_db = await get_user_by_email(email, db)
     if not user_db:

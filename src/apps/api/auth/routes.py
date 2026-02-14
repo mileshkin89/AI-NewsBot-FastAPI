@@ -19,7 +19,7 @@ from apps.api.auth.jwt import (
 )
 from apps.api.auth.schemas import Token
 from apps.api.auth.utils import set_refresh_token_cookie
-from database.db import get_db
+from database.db import get_db_depends
 from database.models import Admin
 
 auth_router = APIRouter(tags=["Auth"], prefix="/auth")
@@ -35,7 +35,7 @@ auth_router = APIRouter(tags=["Auth"], prefix="/auth")
 async def login(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_depends),
 ) -> dict:
     """Authenticate user and return access token."""
     user_db = await authenticate_user(form_data.username, form_data.password, db)
@@ -65,7 +65,7 @@ async def login(
 async def refresh_token(
     response: Response,
     refresh_token: str = Cookie(None, alias="refresh_token"),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_depends),
 ) -> dict:
     """Refresh access token using stored refresh token."""
     if not refresh_token:
@@ -109,7 +109,7 @@ async def refresh_token(
 async def logout(
     response: Response,
     current_user: Admin = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_depends),
 ) -> dict:
     """Log out current user and clear session."""
     current_user.refresh_token = None
