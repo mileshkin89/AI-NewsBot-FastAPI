@@ -86,6 +86,9 @@ clean-sources: ## Remove all sources from the database (and related news_items/p
 	@echo "Clean sources completed!"
 	@echo "========================================="
 
+# ============================================
+# Create Superadmin Commands
+# ============================================
 
 create_superadmin: ## Create superadmin user
 	@echo "========================================="
@@ -93,8 +96,8 @@ create_superadmin: ## Create superadmin user
 	@echo "========================================="
 	@echo "Starting database..."
 	@docker compose --env-file $(ENV_FILE) up -d --wait --wait-timeout 60 db
-	@echo "Running create_superadmin script..."
-	@docker compose --env-file $(ENV_FILE) run --rm web sh /app/commands/create_superadmin.sh
+	@echo "Running create_superadmin script:"
+	@docker compose --env-file $(ENV_FILE) run --rm -it web sh /app/commands/create_superadmin.sh
 	@echo "Stopping database..."
 	@docker compose --env-file $(ENV_FILE) stop db
 	@echo "========================================="
