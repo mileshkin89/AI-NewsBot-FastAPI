@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from apps.api.apps_api.dependencies import get_category_by_id
+from apps.api.apps_api.utils import paginate
 from apps.api.apps_api.schemas import (
     CategoriesCreate,
     CategoriesListResponse,
@@ -90,12 +91,7 @@ async def get_categories(
 
     return CategoriesListResponse(
         categories=categories,
-        pagination={
-            "total": total,
-            "skip": skip,
-            "limit": limit,
-            "has_more": (skip + len(categories)) < total,
-        },
+        pagination=paginate(total, skip, limit, len(categories)),
     )
 
 
@@ -147,12 +143,7 @@ async def get_sources_by_category(
     return SourcesByCategoryResponse(
         category=category,
         sources=sources,
-        pagination={
-            "total": total,
-            "skip": skip,
-            "limit": limit,
-            "has_more": skip + len(sources) < total,
-        },
+        pagination=paginate(total, skip, limit, len(sources)),
     )
 
 
@@ -215,12 +206,7 @@ async def get_users_by_category(
     return UsersByCategoryResponse(
         category=category,
         users=users,
-        pagination={
-            "total": total,
-            "skip": skip,
-            "limit": limit,
-            "has_more": skip + len(users) < total,
-        },
+        pagination=paginate(total, skip, limit, len(users)),
     )
 
 

@@ -47,11 +47,11 @@ async def main():
 
     tasks = [
         asyncio.create_task(parse_news_items()),
-        asyncio.create_task(deduplicate_news_items()),
-        asyncio.create_task(create_posts()),
-        asyncio.create_task(generate_posts()),
-        asyncio.create_task(process_users_posts()),
-        asyncio.create_task(publish_posts()),
+        # asyncio.create_task(deduplicate_news_items()),
+        # asyncio.create_task(create_posts()),
+        # asyncio.create_task(generate_posts()),
+        # asyncio.create_task(process_users_posts()),
+        # asyncio.create_task(publish_posts()),
     ]
     for t in tasks:
         t.add_done_callback(_log_task_exception)

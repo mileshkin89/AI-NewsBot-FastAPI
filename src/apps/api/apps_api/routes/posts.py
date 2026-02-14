@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from apps.api.apps_api.dependencies import get_post_by_id
+from apps.api.apps_api.utils import paginate
 from apps.api.apps_api.schemas import PostCreate, PostListResponse, PostResponse, PostUpdate
 from database.db import get_db_depends
 from database.enams import PostStatus
@@ -93,12 +94,7 @@ async def get_posts(
 
     return PostListResponse(
         posts=posts,
-        pagination={
-            "total": total,
-            "skip": skip,
-            "limit": limit,
-            "has_more": (skip + len(posts)) < total,
-        },
+        pagination=paginate(total, skip, limit, len(posts)),
     )
 
 

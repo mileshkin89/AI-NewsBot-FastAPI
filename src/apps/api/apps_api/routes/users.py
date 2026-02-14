@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from apps.api.apps_api.dependencies import get_user_by_id
+from apps.api.apps_api.utils import paginate
 from apps.api.apps_api.schemas import (
     CategoriesByUserResponse,
     UserListResponse,
@@ -71,12 +72,7 @@ async def get_categories_by_user(
     return CategoriesByUserResponse(
         user=user,
         categories=categories,
-        pagination={
-            "total": total,
-            "skip": skip,
-            "limit": limit,
-            "has_more": skip + len(categories) < total,
-        },
+        pagination=paginate(total, skip, limit, len(categories)),
     )
 
 
@@ -131,12 +127,7 @@ async def get_users(
 
     return UserListResponse(
         users=users,
-        pagination={
-            "total": total,
-            "skip": skip,
-            "limit": limit,
-            "has_more": (skip + len(users)) < total,
-        },
+        pagination=paginate(total, skip, limit, len(users)),
     )
 
 
