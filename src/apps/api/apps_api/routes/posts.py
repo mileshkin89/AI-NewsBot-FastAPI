@@ -8,13 +8,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from apps.api.apps_api.dependencies import get_post_by_id
+from apps.api.auth.dependencies import admin_or_superadmin_required
 from apps.api.apps_api.utils import paginate
 from apps.api.apps_api.schemas import PostCreate, PostListResponse, PostResponse, PostUpdate
 from database.db import get_db_depends
 from database.enams import PostStatus
 from database.models import Post
 
-post_router = APIRouter(tags=["Posts"])
+post_router = APIRouter(
+    tags=["Posts"],
+    dependencies=[Depends(admin_or_superadmin_required)],
+)
 
 
 @post_router.post(
@@ -22,7 +26,7 @@ post_router = APIRouter(tags=["Posts"])
     response_model=PostResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create post",
-    description="Create a new post.",
+    description="Create a new post. Requires admin or superadmin role.",
 )
 async def create_post(
     post: PostCreate,
@@ -41,7 +45,7 @@ async def create_post(
     response_model=PostListResponse,
     status_code=status.HTTP_200_OK,
     summary="List posts",
-    description="Retrieve a paginated list of posts with optional filters.",
+    description="Retrieve a paginated list of posts with optional filters. Requires admin or superadmin role.",
 )
 async def get_posts(
     db: AsyncSession = Depends(get_db_depends),
@@ -103,7 +107,7 @@ async def get_posts(
     response_model=PostResponse,
     status_code=status.HTTP_200_OK,
     summary="Get post",
-    description="Retrieve a post by ID.",
+    description="Retrieve a post by ID. Requires admin or superadmin role.",
 )
 async def get_post(
     post: Post | None = Depends(get_post_by_id),
@@ -117,7 +121,7 @@ async def get_post(
     response_model=PostResponse,
     status_code=status.HTTP_200_OK,
     summary="Update post",
-    description="Update post fields. Only provided fields are updated.",
+    description="Update post fields. Only provided fields are updated. Requires admin or superadmin role.",
 )
 async def update_post(
     up_post: PostUpdate,
@@ -138,7 +142,7 @@ async def update_post(
     "/posts/{post_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete post",
-    description="Permanently delete a post.",
+    description="Permanently delete a post. Requires admin or superadmin role.",
 )
 async def delete_post(
     post: Post | None = Depends(get_post_by_id),

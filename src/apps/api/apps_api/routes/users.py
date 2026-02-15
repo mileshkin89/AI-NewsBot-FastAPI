@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from apps.api.apps_api.dependencies import get_user_by_id
+from apps.api.auth.dependencies import admin_or_superadmin_required
 from apps.api.apps_api.utils import paginate
 from apps.api.apps_api.schemas import (
     CategoriesByUserResponse,
@@ -15,7 +16,10 @@ from apps.api.apps_api.schemas import (
 from database.db import get_db_depends
 from database.models import Category, User, user_category
 
-user_router = APIRouter(tags=["Users"])
+user_router = APIRouter(
+    tags=["Users"],
+    dependencies=[Depends(admin_or_superadmin_required)],
+)
 
 
 @user_router.get(
@@ -23,7 +27,7 @@ user_router = APIRouter(tags=["Users"])
     response_model=UserResponse,
     status_code=status.HTTP_200_OK,
     summary="Get user",
-    description="Retrieve a user by ID.",
+    description="Retrieve a user by ID. Requires admin or superadmin role.",
 )
 async def get_user(
     user: User | None = Depends(get_user_by_id),
@@ -37,7 +41,7 @@ async def get_user(
     response_model=CategoriesByUserResponse,
     status_code=status.HTTP_200_OK,
     summary="List categories by user",
-    description="Retrieve categories subscribed by a user with pagination.",
+    description="Retrieve categories subscribed by a user with pagination. Requires admin or superadmin role.",
 )
 async def get_categories_by_user(
     user: User | None = Depends(get_user_by_id),
@@ -81,7 +85,7 @@ async def get_categories_by_user(
     response_model=UserListResponse,
     status_code=status.HTTP_200_OK,
     summary="List users",
-    description="Retrieve a paginated list of users with optional filters.",
+    description="Retrieve a paginated list of users with optional filters. Requires admin or superadmin role.",
 )
 async def get_users(
     db: AsyncSession = Depends(get_db_depends),
@@ -136,7 +140,7 @@ async def get_users(
     response_model=UserResponse,
     status_code=status.HTTP_200_OK,
     summary="Deactivate user",
-    description="Set user active status to false.",
+    description="Set user active status to false. Requires admin or superadmin role.",
 )
 async def deactivate_user(
     user: User | None = Depends(get_user_by_id),
@@ -155,7 +159,7 @@ async def deactivate_user(
     response_model=UserResponse,
     status_code=status.HTTP_200_OK,
     summary="Activate user",
-    description="Set user active status to true.",
+    description="Set user active status to true. Requires admin or superadmin role.",
 )
 async def activate_user(
     user: User | None = Depends(get_user_by_id),
@@ -173,7 +177,7 @@ async def activate_user(
     "/users/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete user",
-    description="Permanently delete a user.",
+    description="Permanently delete a user. Requires admin or superadmin role.",
 )
 async def delete_user(
     user: User | None = Depends(get_user_by_id),

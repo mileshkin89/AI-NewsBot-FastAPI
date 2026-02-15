@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from apps.api.apps_api.dependencies import get_source_by_id
+from apps.api.auth.dependencies import admin_or_superadmin_required
 from apps.api.apps_api.utils import paginate
 from apps.api.apps_api.schemas import (
     CategoriesBySourceResponse,
@@ -18,7 +19,10 @@ from database.db import get_db_depends
 from database.enams import SourceType
 from database.models import Category, Source, source_category
 
-source_router = APIRouter(tags=["Sources"])
+source_router = APIRouter(
+    tags=["Sources"],
+    dependencies=[Depends(admin_or_superadmin_required)],
+)
 
 
 @source_router.post(
@@ -26,7 +30,7 @@ source_router = APIRouter(tags=["Sources"])
     response_model=SourceResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create source",
-    description="Create a new news source.",
+    description="Create a new news source. Requires admin or superadmin role.",
 )
 async def create_source(
     source: SourceCreate,
@@ -51,7 +55,7 @@ async def create_source(
     response_model=SourceListResponse,
     status_code=status.HTTP_200_OK,
     summary="List sources",
-    description="Retrieve a paginated list of sources with optional filters.",
+    description="Retrieve a paginated list of sources with optional filters. Requires admin or superadmin role.",
 )
 async def get_sources(
     db: AsyncSession = Depends(get_db_depends),
@@ -91,7 +95,7 @@ async def get_sources(
     response_model=CategoriesBySourceResponse,
     status_code=status.HTTP_200_OK,
     summary="List categories by source",
-    description="Retrieve categories assigned to a source with pagination.",
+    description="Retrieve categories assigned to a source with pagination. Requires admin or superadmin role.",
 )
 async def get_categories_by_source(
     source: Source | None = Depends(get_source_by_id),
@@ -135,7 +139,7 @@ async def get_categories_by_source(
     response_model=SourceResponse,
     status_code=status.HTTP_200_OK,
     summary="Get source",
-    description="Retrieve a source by ID.",
+    description="Retrieve a source by ID. Requires admin or superadmin role.",
 )
 async def get_source(
     source: Source | None = Depends(get_source_by_id),
@@ -149,7 +153,7 @@ async def get_source(
     response_model=SourceResponse,
     status_code=status.HTTP_200_OK,
     summary="Deactivate source",
-    description="Set source enabled status to false.",
+    description="Set source enabled status to false. Requires admin or superadmin role.",
 )
 async def deactivate_source(
     source: Source | None = Depends(get_source_by_id),
@@ -168,7 +172,7 @@ async def deactivate_source(
     response_model=SourceResponse,
     status_code=status.HTTP_200_OK,
     summary="Activate source",
-    description="Set source enabled status to true.",
+    description="Set source enabled status to true. Requires admin or superadmin role.",
 )
 async def activate_source(
     source: Source | None = Depends(get_source_by_id),
@@ -187,7 +191,7 @@ async def activate_source(
     response_model=SourceResponse,
     status_code=status.HTTP_200_OK,
     summary="Update source",
-    description="Update source fields. Only provided fields are updated.",
+    description="Update source fields. Only provided fields are updated. Requires admin or superadmin role.",
 )
 async def update_source(
     up_source: SourceUpdate,
@@ -208,7 +212,7 @@ async def update_source(
     "/sources/{source_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete source",
-    description="Permanently delete a source.",
+    description="Permanently delete a source. Requires admin or superadmin role.",
 )
 async def delete_source(
     source: Source | None = Depends(get_source_by_id),

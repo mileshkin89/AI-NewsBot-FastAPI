@@ -102,3 +102,17 @@ def admin_required(
             detail="Admin privileges required",
         )
     return current_user
+
+
+def admin_or_superadmin_required(
+    current_user: Admin = Depends(get_current_user),
+) -> Admin:
+    if current_user.is_super_admin:
+        return current_user
+
+    if current_user.is_active:
+        return current_user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Admin or SuperAdmin privileges required",
+    )

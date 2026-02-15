@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from apps.api.apps_api.dependencies import get_category_by_id
+from apps.api.auth.dependencies import admin_or_superadmin_required
 from apps.api.apps_api.utils import paginate
 from apps.api.apps_api.schemas import (
     CategoriesCreate,
@@ -19,7 +20,10 @@ from database.db import get_db_depends
 from database.enams import SourceType
 from database.models import Category, Source, User, source_category, user_category
 
-category_router = APIRouter(tags=["Categories"])
+category_router = APIRouter(
+    tags=["Categories"],
+    dependencies=[Depends(admin_or_superadmin_required)],
+)
 
 
 @category_router.post(
@@ -27,7 +31,7 @@ category_router = APIRouter(tags=["Categories"])
     response_model=CategoriesResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create category",
-    description="Create a new news category.",
+    description="Create a new news category. Requires admin or superadmin role.",
 )
 async def create_category(
     category: CategoriesCreate,
@@ -49,7 +53,7 @@ async def create_category(
     response_model=CategoriesResponse,
     status_code=status.HTTP_200_OK,
     summary="Get category",
-    description="Retrieve a category by ID.",
+    description="Retrieve a category by ID. Requires admin or superadmin role.",
 )
 async def get_category(
     category: Category | None = Depends(get_category_by_id),
@@ -63,7 +67,7 @@ async def get_category(
     response_model=CategoriesListResponse,
     status_code=status.HTTP_200_OK,
     summary="List categories",
-    description="Retrieve a paginated list of categories with optional filters.",
+    description="Retrieve a paginated list of categories with optional filters. Requires admin or superadmin role.",
 )
 async def get_categories(
     db: AsyncSession = Depends(get_db_depends),
@@ -100,7 +104,7 @@ async def get_categories(
     response_model=SourcesByCategoryResponse,
     status_code=status.HTTP_200_OK,
     summary="List sources by category",
-    description="Retrieve sources assigned to a category with pagination.",
+    description="Retrieve sources assigned to a category with pagination. Requires admin or superadmin role.",
 )
 async def get_sources_by_category(
     category: Category | None = Depends(get_category_by_id),
@@ -152,7 +156,7 @@ async def get_sources_by_category(
     response_model=UsersByCategoryResponse,
     status_code=status.HTTP_200_OK,
     summary="List users by category",
-    description="Retrieve users subscribed to a category with pagination.",
+    description="Retrieve users subscribed to a category with pagination. Requires admin or superadmin role.",
 )
 async def get_users_by_category(
     category: Category | None = Depends(get_category_by_id),
@@ -215,7 +219,7 @@ async def get_users_by_category(
     response_model=CategoriesResponse,
     status_code=status.HTTP_200_OK,
     summary="Deactivate category",
-    description="Set category enabled status to false.",
+    description="Set category enabled status to false. Requires admin or superadmin role.",
 )
 async def deactivate_category(
     category: Category | None = Depends(get_category_by_id),
@@ -234,7 +238,7 @@ async def deactivate_category(
     response_model=CategoriesResponse,
     status_code=status.HTTP_200_OK,
     summary="Activate category",
-    description="Set category enabled status to true.",
+    description="Set category enabled status to true. Requires admin or superadmin role.",
 )
 async def activate_category(
     category: Category | None = Depends(get_category_by_id),
@@ -253,7 +257,7 @@ async def activate_category(
     response_model=CategoriesResponse,
     status_code=status.HTTP_200_OK,
     summary="Update category",
-    description="Update category fields. Only provided fields are updated.",
+    description="Update category fields. Only provided fields are updated. Requires admin or superadmin role.",
 )
 async def update_category(
     up_category: CategoriesUpdate,
@@ -274,7 +278,7 @@ async def update_category(
     "/categories/{category_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete category",
-    description="Permanently delete a category.",
+    description="Permanently delete a category. Requires admin or superadmin role.",
 )
 async def delete_category(
     category: Category | None = Depends(get_category_by_id),

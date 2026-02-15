@@ -16,12 +16,14 @@ from database.models import Admin
 
 from .schemas import AdminCreate, AdminListResponse, AdminResponse
 
-admin_router = APIRouter(tags=["Admins"])
+admin_router = APIRouter(
+    tags=["Admins"],
+    dependencies=[Depends(superadmin_required)],
+)
 
 
 @admin_router.get(
     "/admins",
-    dependencies=[Depends(superadmin_required)],
     response_model=AdminListResponse,
     status_code=status.HTTP_200_OK,
     summary="List admins",
@@ -39,7 +41,6 @@ async def get_admins(
 
 @admin_router.post(
     "/admins",
-    dependencies=[Depends(superadmin_required)],
     response_model=AdminResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create admin",
@@ -74,7 +75,6 @@ async def create_admin(
 
 @admin_router.patch(
     "/admins/{admin_id}/deactivate",
-    dependencies=[Depends(superadmin_required)],
     status_code=status.HTTP_200_OK,
     summary="Deactivate admin",
     description="Deactivate an admin user. Requires superadmin role.",
@@ -85,5 +85,41 @@ async def deactivate_admin(
 ) -> None:
     """Deactivate an admin user."""
     admin = await get_user_by_id(admin_id, db)
+
+    if admin is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Admin not found",
+        )
+
+    if admin.is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Super admin cannot be deactivated",
+        )
+
+    admin.is_active = False
+    await db.commit()
+
+
+@admin_router.patch(
+    "/admins/{admin_id}/activate",
+    status_code=status.HTTP_200_OK,
+    summary="Activate admin",
+    description="Activate an admin user. Requires superadmin role.",
+)
+async def activate_admin(
+    admin_id: int,
+    db: AsyncSession = Depends(get_db_depends),
+) -> None:
+    """Deactivate an admin user."""
+    admin = await get_user_by_id(admin_id, db)
+
+    if admin is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Admin not found",
+        )
+
     admin.is_active = False
     await db.commit()
