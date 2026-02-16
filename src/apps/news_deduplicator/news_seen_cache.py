@@ -9,8 +9,14 @@ from typing import Any, Sequence
 
 from redis.asyncio import Redis
 
+from settings import settings
+
 KEY_PREFIX = "news_seen"
-KEY_TTL_SEC = 60 * 60 * 24 * 30  # 30 days
+
+
+def _key_ttl_sec() -> int:
+    """TTL for cache key in seconds (from settings.NEWS_SEEN_CACHE_TTL_DAYS)."""
+    return 60 * 60 * 24 * settings.NEWS_SEEN_CACHE_TTL_DAYS
 
 
 def _fingerprint(title: str | None, raw_text: str | None, url: str) -> str:
@@ -70,7 +76,7 @@ class NewsSeenCache:
         fp = _item_fingerprint(source_message_id, title, raw_text, url)
         await self._redis.sadd(key, fp)
         if await self._redis.ttl(key) == -1:
-            await self._redis.expire(key, KEY_TTL_SEC)
+            await self._redis.expire(key, _key_ttl_sec())
 
     async def filter_unseen(
         self,
@@ -122,4 +128,4 @@ class NewsSeenCache:
         ]
         await self._redis.sadd(key, *fps)
         if await self._redis.ttl(key) == -1:
-            await self._redis.expire(key, KEY_TTL_SEC)
+            await self._redis.expire(key, _key_ttl_sec())

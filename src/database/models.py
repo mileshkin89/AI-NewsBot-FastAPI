@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, Boolean, ForeignKey, func, UniqueConstraint, Table, Column
+from sqlalchemy import DateTime, String, Boolean, BigInteger, ForeignKey, func, UniqueConstraint, Table, Column, Index
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SAEnum
 
@@ -90,6 +90,8 @@ class NewsItem(Base):
 
     __table_args__ = (
         UniqueConstraint("title", "source_id", name="uq_news_title_source"),
+        Index("ix_news_items_simhash", "simhash"),
+        Index("ix_news_items_created_at", "created_at"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
@@ -98,7 +100,12 @@ class NewsItem(Base):
     raw_text: Mapped[str] = mapped_column(String(4100))
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
-    is_duplicate: Mapped[bool] = mapped_column(Boolean, default=False)
+    simhash: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    is_duplicate: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    duplicate_of_id: Mapped[int | None] = mapped_column(
+        ForeignKey("news_items.id"),
+        nullable=True,
+    )
     status: Mapped[NewsItemStatus] = mapped_column(
         SAEnum(NewsItemStatus, native_enum=False),
         default=NewsItemStatus.NEW,
@@ -114,6 +121,11 @@ class NewsItem(Base):
     source_id: Mapped[int] = mapped_column(ForeignKey("sources.id"))
 
     source: Mapped["Source"] = relationship("Source", back_populates="news_items")
+    duplicate_of: Mapped["NewsItem | None"] = relationship(
+        "NewsItem",
+        remote_side="NewsItem.id",
+        foreign_keys=[duplicate_of_id],
+    )
 
     posts: Mapped["Post"] = relationship(
         "Post",

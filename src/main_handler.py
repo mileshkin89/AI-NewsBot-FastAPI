@@ -1,21 +1,24 @@
 import asyncio
 
-from apps.news_deduplicator.deduplicator import Deduplicator
 from apps.news_parser.factory import get_parser
 from apps.post_generator.generator import get_post_generator, PostGenerationService
 from apps.tg_bot.publisher import PostPublisher
 from database.repository import NewsRepository
+from database.db import get_db
 from apps.news_deduplicator.news_seen_cache import NewsSeenCache
 from infrastructure.redis_client import get_redis_client
 from logging_config import get_logger
 from settings import settings
+from apps.news_deduplicator.simhash_deduplicator import SimhashDeduplicator
+from apps.news_deduplicator.text_normalizer import normalize_text
 
 logger = get_logger(__name__)
 repo = NewsRepository()
+simhash_deduplicator = SimhashDeduplicator()
 
 
 async def _process_one_source(source, cache: NewsSeenCache | None) -> None:
-    """Parse one source, filter unseen via cache, insert batch, mark batch in cache."""
+    """Parse one source, primary dedup via cache, save news_items with status=NEW (no SimHash yet)."""
     news_items = []
     try:
         parser = get_parser(source, limit=settings.NEWS_PARSE_LIMIT)
@@ -29,7 +32,15 @@ async def _process_one_source(source, cache: NewsSeenCache | None) -> None:
     else:
         to_create = news_items
 
+    if not to_create:
+        if news_items:
+            logger.info(
+                f"Parsed {len(news_items)} items from source {source.url}, created 0 (all seen)"
+            )
+        return
+
     created = await repo.create_news_items_batch(to_create, source)
+
     if cache is not None and to_create:
         await cache.mark_seen_batch(source.id, to_create)
 
@@ -66,20 +77,47 @@ async def parse_news_items():
 
 
 async def deduplicate_news_items():
-    deduplicator = Deduplicator()
-    logger.info("Deduplication task started")
+    """Process news_items with status=NEW: set simhash, is_duplicate, duplicate_of_id, status=DEDUPLICATED."""
+    await asyncio.sleep(5)
+    logger.info("SimHash deduplication task started")
 
     while True:
         items = await repo.get_new_items()
         if items:
             logger.info(f"Deduplicating {len(items)} new items")
-        for item in items:
-            await deduplicator.deduplicate(news_item_id=item.id)
+
+        async with get_db() as db:
+            for item in items:
+
+                normalized = normalize_text(item.raw_text or "")
+                if not normalized.strip():
+                    await repo.update_news_item_dedup_result(
+                        item.id,
+                        simhash=0,
+                        is_duplicate=True,
+                        duplicate_of_id=None,
+                    )
+                    continue
+
+                is_dup, dup_id, simhash = await simhash_deduplicator.check_duplicate(
+                    db,
+                    item.raw_text or "",
+                    threshold=settings.SIMHASH_DEDUP_THRESHOLD,
+                    title=item.title,
+                    current_item_id=item.id,
+                )
+                await repo.update_news_item_dedup_result(
+                    item.id,
+                    simhash=simhash,
+                    is_duplicate=is_dup,
+                    duplicate_of_id=dup_id,
+                )
 
         await asyncio.sleep(20)
 
 
 async def create_posts():
+    await asyncio.sleep(8)
     logger.info("Create posts task started")
     while True:
         items = await repo.get_deduplicated_items()
@@ -92,6 +130,7 @@ async def create_posts():
 
 
 async def generate_posts():
+    await asyncio.sleep(12)
     logger.info("Initializing post generator")
     generator = await get_post_generator()
     service = PostGenerationService(repo, generator)
