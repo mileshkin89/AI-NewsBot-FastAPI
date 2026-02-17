@@ -237,3 +237,8 @@ class Admin(Base):
         server_default=func.now(),
         nullable=False,
     )
+    last_login: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        default=None,
+    )

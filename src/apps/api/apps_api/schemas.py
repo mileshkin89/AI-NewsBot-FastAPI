@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from database.enams import PostStatus, SourceType
+from database.enams import NewsItemStatus, PostStatus, SourceType
 
 
 # --------------
@@ -169,6 +169,51 @@ class PostResponse(BaseModel):
     generated_text: str | None = Field(default=None, max_length=2000)
     created_at: datetime
     status: PostStatus
+
+    model_config = {"from_attributes": True}
+
+
+# -------- Nested schemas for post detail --------
+class SourceWithCategoriesResponse(BaseModel):
+    """Source with assigned categories for nested responses."""
+
+    id: int
+    name: str
+    type: SourceType
+    url: str
+    title_selector: str | None
+    enabled: bool
+    categories: list[CategoriesResponse] = Field(default_factory=list, description="Categories assigned to the source")
+
+    model_config = {"from_attributes": True}
+
+
+class NewsItemDetailResponse(BaseModel):
+    """News item with source and categories for post detail."""
+
+    id: int
+    title: str
+    url: str
+    raw_text: str
+    published_at: datetime
+    status: NewsItemStatus
+    created_at: datetime
+    source: SourceWithCategoriesResponse = Field(description="Source of the news item with categories")
+
+    model_config = {"from_attributes": True}
+
+
+class PostDetailResponse(BaseModel):
+    """Post with nested news_item, source and categories."""
+
+    id: int
+    generated_text: str | None = Field(default=None, max_length=2000)
+    created_at: datetime
+    status: PostStatus
+    news: NewsItemDetailResponse = Field(
+        description="Related news item with source and categories",
+        serialization_alias="news_item",
+    )
 
     model_config = {"from_attributes": True}
 

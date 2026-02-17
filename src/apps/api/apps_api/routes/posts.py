@@ -7,10 +7,10 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from apps.api.apps_api.dependencies import get_post_by_id
+from apps.api.apps_api.dependencies import get_post_by_id, get_post_by_id_with_details
 from apps.api.auth.dependencies import admin_or_superadmin_required
 from apps.api.apps_api.utils import paginate
-from apps.api.apps_api.schemas import PostCreate, PostListResponse, PostResponse, PostUpdate
+from apps.api.apps_api.schemas import PostCreate, PostDetailResponse, PostListResponse, PostResponse, PostUpdate
 from database.db import get_db_depends
 from database.enams import PostStatus
 from database.models import Post
@@ -104,15 +104,15 @@ async def get_posts(
 
 @post_router.get(
     "/posts/{post_id}",
-    response_model=PostResponse,
+    response_model=PostDetailResponse,
     status_code=status.HTTP_200_OK,
     summary="Get post",
-    description="Retrieve a post by ID. Requires admin or superadmin role.",
+    description="Retrieve a post by ID with nested news_item, source and categories. Requires admin or superadmin role.",
 )
 async def get_post(
-    post: Post | None = Depends(get_post_by_id),
+    post: Post = Depends(get_post_by_id_with_details),
 ) -> Post:
-    """Return a single post by ID."""
+    """Return a single post by ID with nested news_item, source and categories."""
     return post
 
 
