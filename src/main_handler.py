@@ -171,7 +171,6 @@ async def publish_posts():
             try:
                 await publisher.publish(text=
                                         f"Source = {u_p.post.news.source.name}\n\n"
-                                        f"raw text = {u_p.post.news.raw_text}\n\n" 
                                         f"generated text = {u_p.post.generated_text}")
 
                 await repo.mark_users_post_published(u_p)

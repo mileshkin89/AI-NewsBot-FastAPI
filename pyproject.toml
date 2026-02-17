@@ -23,4 +23,21 @@ dependencies = [
     "uvicorn>=0.40.0",
     "python-multipart>=0.0.22",
     "argon2-cffi>=25.1.0",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.28.0",
+    "aiosqlite>=0.20.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["src/tests"]
+pythonpath = ["src"]
+filterwarnings = [
+    # passlib accesses argon2.__version__ (deprecated in argon2-cffi)
+    "ignore:Accessing argon2.__version__ is deprecated:DeprecationWarning",
+    # SQLAlchemy session/transaction lifecycle in test rollback
+    "ignore:transaction already deassociated:sqlalchemy.exc.SAWarning",
+    # Test env often uses short SECRET_KEY; production should use 32+ bytes (RFC 7518)
+    "ignore:The HMAC key is:Warning",
 ]

@@ -5,8 +5,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from sqlalchemy.orm import selectinload
+
 from database.db import get_db_depends
-from database.models import Category, Post, Source, User
+from database.models import Category, NewsItem, Post, Source, User
 
 
 async def get_category_by_id(
@@ -45,6 +47,27 @@ async def get_post_by_id(
 ) -> Post:
     """Resolve post by ID. Raises 404 if not found."""
     result = await db.execute(select(Post).where(Post.id == post_id))
+    post = result.scalar_one_or_none()
+    if post is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found",
+        )
+    return post
+
+
+async def get_post_by_id_with_details(
+    post_id: int = Path(..., description="Post ID"),
+    db: AsyncSession = Depends(get_db_depends),
+) -> Post:
+    """Resolve post by ID with news_item, source and categories loaded. Raises 404 if not found."""
+    result = await db.execute(
+        select(Post)
+        .where(Post.id == post_id)
+        .options(
+            selectinload(Post.news).selectinload(NewsItem.source).selectinload(Source.categories),
+        )
+    )
     post = result.scalar_one_or_none()
     if post is None:
         raise HTTPException(
