@@ -142,6 +142,11 @@ async def generate_posts():
         await asyncio.sleep(20)
 
 
+async def _assign_post_to_users(users: list, post) -> None:
+    """Assign one post to all users (bulk insert with single-insert fallback)."""
+    await repo.create_users_posts_for_post(users, post)
+
+
 async def process_users_posts():
     logger.info("Process users posts task started")
     while True:
@@ -150,13 +155,28 @@ async def process_users_posts():
 
         if users and posts:
             logger.info(f"Assigning {len(posts)} posts to {len(users)} users")
-        for user in users:
-            for post in posts:
-                await repo.create_users_post(user, post)
+
+        await asyncio.gather(*[_assign_post_to_users(users, post) for post in posts])
 
         await repo.mark_posts_processed(posts)
 
         await asyncio.sleep(20)
+
+
+async def _publish_one_user_post(u_p):
+    """Publish one user post; exceptions are logged, not raised."""
+    publisher = PostPublisher(chat_id=u_p.user.chat_id)
+    try:
+        await publisher.publish(
+            text=(
+                f"Source = {u_p.post.news.source.name}\n\n"
+                f"generated text = {u_p.post.generated_text}"
+            )
+        )
+        await repo.mark_users_post_published(u_p)
+        logger.debug(f"Published post for user chat_id={u_p.user.chat_id}")
+    except Exception as e:
+        logger.exception(f"Publish failed for user chat_id={u_p.user.chat_id}: {e}")
 
 
 async def publish_posts():
@@ -166,16 +186,6 @@ async def publish_posts():
         if users_posts:
             logger.info(f"Publishing {len(users_posts)} user posts")
 
-        for u_p in users_posts:
-            publisher = PostPublisher(chat_id=u_p.user.chat_id)
-            try:
-                await publisher.publish(text=
-                                        f"Source = {u_p.post.news.source.name}\n\n"
-                                        f"generated text = {u_p.post.generated_text}")
-
-                await repo.mark_users_post_published(u_p)
-                logger.debug(f"Published post for user chat_id={u_p.user.chat_id}")
-            except Exception as e:
-                logger.exception(f"Publish failed for user chat_id={u_p.user.chat_id}: {e}")
+        await asyncio.gather(*[_publish_one_user_post(u_p) for u_p in users_posts])
 
         await asyncio.sleep(20)

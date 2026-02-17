@@ -317,6 +317,31 @@ class NewsRepository:
                 await db.rollback()
                 logger.debug(f"Duplicate users_post skipped: user_id={user.id}, post_id={post.id}")
 
+    async def create_users_posts_for_post(self, users: list[User], post: Post) -> None:
+        """
+        Create user-post assignments for one post and all users (bulk insert).
+        On IntegrityError falls back to inserting one by one via create_users_post.
+        """
+        if not users:
+            return
+        async with get_db() as db:
+            for user in users:
+                db.add(
+                    UsersPost(
+                        user_id=user.id,
+                        post_id=post.id,
+                        status=UsersPostStatus.NEW,
+                    )
+                )
+            try:
+                await db.commit()
+                logger.debug(f"Created {len(users)} users_posts for post_id={post.id} (bulk)")
+                return
+            except IntegrityError:
+                await db.rollback()
+        for user in users:
+            await self.create_users_post(user, post)
+
     async def get_new_users_posts(self) -> list[UsersPost]:
         """Return user-post assignments with status NEW, with user, post, news, and source loaded."""
         async with get_db() as db:
