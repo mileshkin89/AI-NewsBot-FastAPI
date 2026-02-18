@@ -42,7 +42,7 @@ class UserRepository:
         self.db = db
 
     @staticmethod
-    async def create_user(chat_id: int) -> None:
+    async def create_user(chat_id: int, username: str) -> None:
         """Create a user by chat_id if not exists; subscribe them to all enabled categories."""
         async with get_db() as db:
             existing_user = await db.scalar(
@@ -53,6 +53,7 @@ class UserRepository:
 
             user = User(
                 chat_id=chat_id,
+                name=username,
             )
             db.add(user)
 

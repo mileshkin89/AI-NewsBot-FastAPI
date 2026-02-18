@@ -169,6 +169,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     chat_id: Mapped[int] = mapped_column(unique=True)
+    name: Mapped[str | None] = mapped_column(String(250), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     subscribed_at: Mapped[datetime] = mapped_column(

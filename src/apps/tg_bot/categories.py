@@ -1,4 +1,4 @@
-"""Category selection handlers: /tags command and inline keyboard (apply/reset/toggle)."""
+"""Category selection handlers: /categories command and inline keyboard (apply/reset/toggle)."""
 
 from types import SimpleNamespace
 
@@ -14,13 +14,16 @@ from aiogram.types import (
 from database.db import get_db
 from database.models import Category
 from .repository import CategoryRepository, UserRepository
+from logging_config import get_logger
+
+logger = get_logger(__name__)
 
 router = Router()
 
 
 def categories_keyboard(
-    categories: list[Category] | list[SimpleNamespace],
-    selected_ids: set[int],
+        categories: list[Category] | list[SimpleNamespace],
+        selected_ids: set[int],
 ) -> InlineKeyboardMarkup:
     """
     Build an inline keyboard: one button per category (with checkmark if selected),
@@ -52,10 +55,10 @@ def categories_keyboard(
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-@router.message(F.text == "/tags")
-async def cmd_tags(message: Message, state: FSMContext) -> None:
+@router.message(F.text == "/categories")
+async def cmd_categories(message: Message, state: FSMContext) -> None:
     """
-    Handle /tags: show category selection keyboard with current user subscriptions.
+    Handle /categories: show category selection keyboard with current user subscriptions.
     Loads enabled categories and user's selected ids, stores them in FSM state.
     """
     async with get_db() as db:
@@ -125,8 +128,13 @@ async def apply_categories(cb: CallbackQuery, state: FSMContext) -> None:
         categories = await categories_repo.get_categories_by_ids(selected_ids)
         await users_repo.update_user_categories(user, categories)
 
+        categories_name = [category.name for category in categories]
+        logger.info(f"User {user.chat_id} applying categories: {categories_name}")
+
     await state.clear()
     await cb.message.edit_text("Settings saved ✅")
+
+
 
 
 @router.callback_query(F.data == "categories_reset")

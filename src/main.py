@@ -9,7 +9,7 @@ from apps.api.apps_api.routes.posts import post_router
 from apps.api.apps_api.routes.sources import source_router
 from apps.api.apps_api.routes.users import user_router
 from apps.api.auth.routes import auth_router
-from apps.tg_bot import start
+from apps.tg_bot import start, categories
 from apps.tg_bot.menu import set_commands
 from main_handler import (
     parse_news_items,
@@ -40,6 +40,7 @@ async def main():
 
     await set_commands()
     dp.include_router(start.router)
+    dp.include_router(categories.router)
     logger.info("Setting bot commands and routers")
 
     load_prompts()
