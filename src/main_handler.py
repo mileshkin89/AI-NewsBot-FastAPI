@@ -1,4 +1,5 @@
 import asyncio
+from collections import defaultdict
 
 from apps.news_parser.factory import get_parser
 from apps.post_generator.generator import get_post_generator, PostGenerationService
@@ -163,20 +164,35 @@ async def process_users_posts():
         await asyncio.sleep(20)
 
 
+def _build_publish_text(u_p) -> str:
+    """Build text for publishing: category name(s) + generated post text."""
+    base = u_p.post.generated_text or ""
+    news = getattr(u_p.post, "news", None)
+    source = getattr(news, "source", None) if news else None
+    if source and getattr(source, "categories", None) and source.categories:
+        names = ", ".join("#" + c.name for c in source.categories if c.name)
+        if names:
+            return f"{base}\n\n[{names}]"
+    return base
+
+
 async def _publish_one_user_post(u_p):
     """Publish one user post; exceptions are logged, not raised."""
     publisher = PostPublisher(chat_id=u_p.user.chat_id)
     try:
-        await publisher.publish(
-            text=(
-                f"Source = {u_p.post.news.source.name}\n\n"
-                f"generated text = {u_p.post.generated_text}"
-            )
-        )
+        await publisher.publish(text=_build_publish_text(u_p))
         await repo.mark_users_post_published(u_p)
         logger.debug(f"Published post for user chat_id={u_p.user.chat_id}")
     except Exception as e:
         logger.exception(f"Publish failed for user chat_id={u_p.user.chat_id}: {e}")
+
+
+async def _publish_user_posts_with_delay(user_posts: list):
+    """Publish one user's posts sequentially with delay between each."""
+    for i, u_p in enumerate(user_posts):
+        await _publish_one_user_post(u_p)
+        if i < len(user_posts) - 1:
+            await asyncio.sleep(settings.PUBLISH_DELAY_SEC)
 
 
 async def publish_posts():
@@ -186,6 +202,10 @@ async def publish_posts():
         if users_posts:
             logger.info(f"Publishing {len(users_posts)} user posts")
 
-        await asyncio.gather(*[_publish_one_user_post(u_p) for u_p in users_posts])
+        by_user: dict[int, list] = defaultdict(list)
+        for u_p in users_posts:
+            by_user[u_p.user.id].append(u_p)
+
+        await asyncio.gather(*[_publish_user_posts_with_delay(posts) for posts in by_user.values()])
 
         await asyncio.sleep(20)

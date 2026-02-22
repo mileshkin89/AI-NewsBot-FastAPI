@@ -11,11 +11,14 @@ class Settings(BaseSettings):
     TG_SESSION_NAME: str
     TG_SESSION_DIR: Path = str(BASE_DIR / "sessions")
 
+    # Max number of news items to fetch per source per parsing cycle.
     NEWS_PARSE_LIMIT: int = 10
+    # Delay in seconds between publishing consecutive posts to the same user.
+    PUBLISH_DELAY_SEC: int = 3
 
     # OpenAI  settings
     OPENAI_API_KEY: str
-    OPENAI_API_MODEL: str = "gpt-3.5-turbo" # "gpt-3.5-turbo"  # "gpt-4.1-mini"
+    OPENAI_API_MODEL: str = "gpt-4.1-mini" # "gpt-3.5-turbo"  # "gpt-4.1-mini"
     OPENAI_API_MODEL_TEMPERATURE: float = 0.3
 
     # Post sender settings
