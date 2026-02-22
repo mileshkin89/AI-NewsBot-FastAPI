@@ -1,5 +1,6 @@
 """
 SimHash-based deduplication service for news items.
+
 Checks duplicates only within the configured lookback window (SIMHASH_DEDUP_LOOKBACK_HOURS).
 """
 
@@ -19,7 +20,7 @@ logger = get_logger(__name__)
 
 
 class SimhashDeduplicator:
-    """Deduplicates news by SimHash (64-bit) over configured lookback window."""
+    """Deduplicate news by SimHash (64-bit) over the configured lookback window."""
 
     async def check_duplicate(
         self,
@@ -31,14 +32,18 @@ class SimhashDeduplicator:
     ) -> tuple[bool, Optional[int], int]:
         """
         Check if text is a duplicate of an existing news item in the lookback window.
+
         Never returns current_item_id as duplicate_of (excludes current row from search).
 
-        :param db_session: Async DB session.
-        :param text: Full news text (raw_text).
-        :param threshold: Max Hamming distance to consider duplicate (default 3).
-        :param title: Optional title for early-exit when text is short (exact match).
-        :param current_item_id: Id of the item being checked; excluded from candidates.
-        :return: (is_duplicate, existing_news_id or None, simhash).
+        Args:
+            db_session: Async DB session.
+            text: Full news text (raw_text).
+            threshold: Max Hamming distance to consider duplicate (default 3).
+            title: Optional title for early-exit when text is short (exact match).
+            current_item_id: Id of the item being checked; excluded from candidates.
+
+        Returns:
+            Tuple (is_duplicate, existing_news_id or None, simhash).
         """
         normalized = normalize_text(text or "")
         simhash = compute_simhash(normalized)
@@ -83,7 +88,7 @@ class SimhashDeduplicator:
         title: str,
         exclude_id: Optional[int] = None,
     ) -> Optional[int]:
-        """Find a news item with the same title in the lookback window. Returns first id or None."""
+        """Find a news item with the same title in the lookback window; return first id or None."""
         if not title or not title.strip():
             return None
         since = datetime.now(timezone.utc) - timedelta(hours=settings.SIMHASH_DEDUP_LOOKBACK_HOURS)

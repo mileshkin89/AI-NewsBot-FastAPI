@@ -1,3 +1,4 @@
+"""Application settings loaded from environment and .env."""
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -5,6 +6,7 @@ BASE_DIR = Path(__file__).parent.parent
 
 
 class Settings(BaseSettings):
+    """Pydantic settings for API keys, DB, Redis, OpenAI, and pipeline options."""
     # Parser settings
     TG_API_ID: int
     TG_API_HASH: str
@@ -83,7 +85,7 @@ class Settings(BaseSettings):
 
     @property
     def redis_url(self) -> str:
-        """Return full Redis connection URL."""
+        """Return the full Redis connection URL."""
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
 

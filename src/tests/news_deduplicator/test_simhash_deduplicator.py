@@ -1,5 +1,6 @@
 """
 Tests for SimhashDeduplicator: check_duplicate with threshold and DB interaction.
+
 Uses the same test text pairs and threshold logic as test_simhash.py.
 """
 
@@ -91,7 +92,11 @@ async def test_check_duplicate_respects_threshold_for_text_pairs(
     deduplicator: SimhashDeduplicator,
     threshold: int,
 ) -> None:
-    """For each threshold 1..7, pair with distance == threshold is duplicate; pair with distance == threshold+1 is not (when available)."""
+    """
+    For each threshold 1..7, pair with distance == threshold is duplicate.
+
+    Pair with distance == threshold+1 is not duplicate (when available).
+    """
     text_a, text_b, dist = SIMHASH_PAIRS_BY_DISTANCE[threshold - 1]
     assert dist == threshold
     hash_b = compute_simhash(normalize_text(text_b))

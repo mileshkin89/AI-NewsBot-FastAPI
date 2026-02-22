@@ -1,3 +1,4 @@
+"""SQLAlchemy models for sources, categories, news items, posts, users, and admins."""
 from datetime import datetime
 
 from sqlalchemy import DateTime, String, Boolean, BigInteger, ForeignKey, func, UniqueConstraint, Table, Column, Index

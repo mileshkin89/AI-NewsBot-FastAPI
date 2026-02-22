@@ -1,3 +1,4 @@
+"""Delete all sources and related news items and posts from the database."""
 import asyncio
 import logging
 
@@ -13,8 +14,7 @@ async def clean_sources() -> int:
     """
     Delete all sources from the database.
 
-    Deletes in dependency order: Post -> NewsItem -> Source (FK constraints).
-    Returns the number of sources deleted.
+    Deletes in dependency order: Post, NewsItem, Source (FK constraints).
 
     Returns:
         Number of source records removed.

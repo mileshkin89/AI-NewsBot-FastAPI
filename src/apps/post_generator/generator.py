@@ -1,6 +1,11 @@
+"""Post text generation via OpenAI and orchestration of pending posts."""
+from logging_config import get_logger
+
 from apps.post_generator.prompt_loader import get_prompts
 from infrastructure.openai import OpenAIClient, get_open_ai_client
 from database.repository import NewsRepository
+
+logger = get_logger(__name__)
 
 
 async def get_post_generator() -> 'PostGenerator':
@@ -10,7 +15,10 @@ async def get_post_generator() -> 'PostGenerator':
 
 
 class PostGenerator:
+    """Generate post text from raw news using OpenAI."""
+
     def __init__(self, client: OpenAIClient):
+        """Initialize with the OpenAI client used for completion."""
         self.client: OpenAIClient = client
 
     async def generate_text(
@@ -21,16 +29,16 @@ class PostGenerator:
             max_output_tokens: int = 800,
     ) -> str:
         """
-        Generates a news text based on raw input text and a prompt.
+        Generate post text from raw input and a prompt.
 
         Args:
-            input_text (str): Raw source text (e.g. parsed news).
-            prompt (str): Instruction for generation (rewrite, summarize, etc.).
-            system_prompt (str | None): Optional system-level instructions.
-            max_output_tokens (int): Maximum length of generated text.
+            input_text: Raw source text (e.g. parsed news).
+            prompt: Instruction for generation (rewrite, summarize, etc.).
+            system_prompt: Optional system-level instructions.
+            max_output_tokens: Maximum length of generated text.
 
         Returns:
-            str: Generated text.
+            Generated text.
         """
         sys_prompt, usr_prompt = get_prompts()
         prompt = prompt if prompt is not None else usr_prompt
@@ -54,15 +62,19 @@ class PostGenerator:
 
 class PostGenerationService:
     """
-    Orchestrates post text generation: load pending posts from the repo,
-    generate text via the given generator, and persist results back.
+    Orchestrate post text generation.
+
+    Load pending posts from the repo, generate text via the given generator,
+    and persist results back.
     """
 
     def __init__(self, repo: NewsRepository, generator: PostGenerator):
         """
+        Initialize with repository and generator.
+
         Args:
             repo: Repository for loading pending posts and saving results.
-            generator: Text generator (e.g. PostGenerator) for raw text -> post text.
+            generator: Text generator (e.g. PostGenerator) for raw text to post text.
         """
         self._repo = repo
         self._generator = generator
@@ -72,5 +84,9 @@ class PostGenerationService:
         pending = await self._repo.get_posts_pending_generation()
 
         for post_id, raw_text in pending:
-            text = await self._generator.generate_text(raw_text)
-            await self._repo.mark_post_generated(post_id, text)
+            try:
+                text = await self._generator.generate_text(raw_text)
+                await self._repo.mark_post_generated(post_id, text)
+            except Exception as e:
+                logger.exception("Post generation failed for post_id=%s: %s", post_id, e)
+                await self._repo.mark_post_failed(post_id)

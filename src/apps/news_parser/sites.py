@@ -1,3 +1,4 @@
+"""Website parser: fetch HTML and extract news items by CSS selector."""
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
@@ -8,6 +9,8 @@ from .schemas import RawNews
 
 
 class SiteParser(BaseParser):
+    """Parse a website by URL and title CSS selector into raw news items."""
+
     def __init__(
         self,
         source_name: str,
@@ -15,6 +18,7 @@ class SiteParser(BaseParser):
         title_selector: str,
         limit: int = 10,
     ):
+        """Initialize with source name, URL, title selector, and item limit."""
         super().__init__(source_name)
         self.url = url
         self.title_selector = title_selector

@@ -60,7 +60,11 @@ async def get_post_by_id_with_details(
     post_id: int = Path(..., description="Post ID"),
     db: AsyncSession = Depends(get_db_depends),
 ) -> Post:
-    """Resolve post by ID with news_item, source and categories loaded. Raises 404 if not found."""
+    """
+    Resolve post by ID with news, source and categories loaded.
+
+    Raises 404 if not found.
+    """
     result = await db.execute(
         select(Post)
         .where(Post.id == post_id)

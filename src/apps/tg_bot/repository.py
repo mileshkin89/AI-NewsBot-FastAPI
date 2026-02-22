@@ -10,10 +10,10 @@ from database.models import Category, User
 
 
 class CategoryRepository:
-    """Reads and filters news categories."""
+    """Read and filter news categories."""
 
     def __init__(self, db: AsyncSession):
-        """Args: db: Active async SQLAlchemy session."""
+        """Initialize with an active async SQLAlchemy session."""
         self.db = db
 
     async def get_enabled_categories(self) -> list[Category]:
@@ -24,7 +24,7 @@ class CategoryRepository:
         return result.all()
 
     async def get_categories_by_ids(self, category_ids: set[int]) -> list[Category]:
-        """Return categories whose id is in category_ids. Returns [] if category_ids is empty."""
+        """Return categories whose id is in category_ids; return empty list if category_ids is empty."""
         if not category_ids:
             return []
 
@@ -35,10 +35,10 @@ class CategoryRepository:
 
 
 class UserRepository:
-    """Reads and updates Telegram users and their category subscriptions."""
+    """Read and update Telegram users and their category subscriptions."""
 
     def __init__(self, db: AsyncSession):
-        """Args: db: Active async SQLAlchemy session."""
+        """Initialize with an active async SQLAlchemy session."""
         self.db = db
 
     @staticmethod

@@ -1,5 +1,6 @@
 """
 Text normalization for SimHash deduplication.
+
 Removes URLs, mentions, emoji, special characters; keeps letters and digits.
 """
 
@@ -27,11 +28,16 @@ _WHITESPACE_PATTERN = re.compile(r"\s+")
 
 def normalize_text(text: str) -> str:
     """
-    Normalize text for SimHash: lowercase, remove URLs, @mentions, emoji,
-    special characters; keep only letters and digits; collapse spaces.
+    Normalize text for SimHash.
 
-    :param text: Raw input text (1–4096 chars typical).
-    :return: Cleaned text.
+    Lowercase; remove URLs, @mentions, emoji, special characters; keep only
+    letters and digits; collapse spaces.
+
+    Args:
+        text: Raw input text (typically 1–4096 chars).
+
+    Returns:
+        Cleaned text.
     """
     if not text or not isinstance(text, str):
         return ""

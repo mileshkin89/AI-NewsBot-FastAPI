@@ -1,3 +1,9 @@
+"""
+FastAPI app and Telegram bot entry point.
+
+Runs background tasks (parse, deduplicate, create/generate posts, publish)
+and mounts API routers for auth, admin, categories, sources, users, posts.
+"""
 import asyncio
 from contextlib import asynccontextmanager
 

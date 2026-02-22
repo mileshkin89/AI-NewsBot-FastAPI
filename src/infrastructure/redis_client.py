@@ -1,3 +1,4 @@
+"""Redis connection pool and async client for news-seen cache."""
 from redis.asyncio import Redis
 from redis.asyncio.connection import ConnectionPool
 
@@ -7,7 +8,7 @@ _redis_pool: ConnectionPool | None = None
 
 
 async def get_pool() -> ConnectionPool:
-    """Get or create a Redis connection pool."""
+    """Return or create the Redis connection pool."""
     global _redis_pool
 
     if _redis_pool is None:

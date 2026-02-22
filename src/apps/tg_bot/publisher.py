@@ -1,4 +1,4 @@
-"""Publishes generated posts to Telegram users."""
+"""Publish generated posts to Telegram users."""
 
 from aiogram import Bot
 
@@ -6,10 +6,12 @@ from infrastructure.tg_bot import bot
 
 
 class PostPublisher:
-    """Sends a text message to a user's Telegram chat."""
+    """Send a text message to a user's Telegram chat."""
 
     def __init__(self, chat_id: int):
         """
+        Initialize with the recipient Telegram chat ID.
+
         Args:
             chat_id: Telegram chat ID of the recipient.
         """
@@ -18,7 +20,7 @@ class PostPublisher:
 
     async def publish(self, text: str):
         """
-        Send a post text to the user's chat.
+        Send the post text to the user's chat.
 
         Args:
             text: Message body (may include markdown/links).

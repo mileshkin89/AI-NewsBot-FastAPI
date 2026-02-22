@@ -1,3 +1,4 @@
+"""Logger factory: console and file handlers, httpx suppression."""
 import logging
 from pathlib import Path
 
@@ -5,18 +6,17 @@ from settings import settings
 
 
 def get_logger(name: str = __name__) -> logging.Logger:
-    """Creates and configures a logger with both console and file handlers.
+    """
+    Create and return a logger with console and file handlers.
 
-    The logger will:
-    - Output DEBUG and higher messages to the console.
-    - Save WARNING and higher messages to a log file at `logs/app.log`.
-    - Suppress verbose logs from `httpx` library.
+    The logger outputs DEBUG and higher to the console, WARNING and higher
+    to `logs/app.log`, and suppresses verbose logs from the httpx library.
 
     Args:
-        name (str): The logger name, typically `__name__`.
+        name: The logger name, typically __name__.
 
     Returns:
-        logging.Logger: A configured logger instance.
+        A configured logger instance.
     """
     logger = logging.getLogger(name)
     if not logger.handlers:

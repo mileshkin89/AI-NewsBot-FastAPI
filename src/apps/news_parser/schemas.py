@@ -1,3 +1,4 @@
+"""Pydantic schemas for raw news and normalized news items (parser output)."""
 from datetime import datetime
 from pydantic import BaseModel
 

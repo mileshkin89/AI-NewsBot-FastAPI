@@ -1,3 +1,4 @@
+"""Interactive script to create a Telethon session file for the Telegram parser."""
 import asyncio
 import shutil
 from pathlib import Path
@@ -7,6 +8,7 @@ from settings import settings
 
 
 async def main():
+    """Create Telethon session via interactive login and move it to TG_SESSION_DIR."""
     session_dir = Path(settings.TG_SESSION_DIR)
     session_file = f"{settings.TG_SESSION_NAME}.session"
 

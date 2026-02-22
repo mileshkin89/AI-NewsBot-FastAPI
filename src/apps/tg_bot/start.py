@@ -14,7 +14,9 @@ router = Router()
 @router.message(F.text == "/start")
 async def cmd_start(message: Message) -> None:
     """
-    Handle /start: create user if new, then send welcome text and prompt to choose categories.
+    Handle /start command.
+
+    Create user if new, then send welcome text and prompt to choose categories.
     """
     chat_id = message.from_user.id
     username = message.from_user.username

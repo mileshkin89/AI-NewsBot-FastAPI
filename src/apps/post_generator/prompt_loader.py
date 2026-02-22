@@ -20,8 +20,8 @@ USER_PROMPT: str = ""
 def load_prompts() -> None:
     """
     Load prompts from text files into module-level SYSTEM_PROMPT and USER_PROMPT.
-    Called at application startup.
-    Uses defaults if files are missing or unreadable.
+
+    Called at application startup. Uses defaults if files are missing or unreadable.
     """
     global SYSTEM_PROMPT, USER_PROMPT
     prompts_dir = settings.PATH_TO_PROMPTS
@@ -44,7 +44,7 @@ def load_prompts() -> None:
 
 
 def get_prompts() -> tuple[str, str]:
-    """Return (SYSTEM_PROMPT, USER_PROMPT). Load if not yet loaded."""
+    """Return (SYSTEM_PROMPT, USER_PROMPT); load from files if not yet loaded."""
     if not SYSTEM_PROMPT and not USER_PROMPT:
         load_prompts()
     return SYSTEM_PROMPT, USER_PROMPT

@@ -5,7 +5,7 @@ def set_refresh_token_cookie(
         response: Response,
         refresh_token: str
 ) -> None:
-    """Sets a refresh token in the cookie."""
+    """Set a refresh token in the response cookie."""
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,

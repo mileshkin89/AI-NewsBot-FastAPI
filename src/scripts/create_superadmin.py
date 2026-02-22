@@ -29,7 +29,7 @@ def get_credentials() -> tuple[str, str]:
     Exits with an error if any field is empty or passwords do not match.
 
     Returns:
-        tuple[str, str]: (email, password) for the new superadmin.
+        (email, password) for the new superadmin.
 
     Raises:
         SystemExit: If email is empty, password is empty, or passwords differ.

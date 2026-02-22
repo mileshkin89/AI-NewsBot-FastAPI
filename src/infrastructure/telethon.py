@@ -1,3 +1,4 @@
+"""Telethon client for fetching messages from Telegram channels."""
 from telethon import TelegramClient
 
 from logging_config import get_logger
@@ -9,6 +10,7 @@ _client: TelegramClient | None = None
 
 
 async def get_telegram_client() -> TelegramClient:
+    """Return or create the shared Telethon client; connect and authorize if needed."""
     global _client
 
     if _client is None:

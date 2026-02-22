@@ -1,3 +1,4 @@
+"""Aiogram bot and dispatcher instance for Telegram handlers."""
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties

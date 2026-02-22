@@ -1,5 +1,7 @@
 """
-Async repository for news pipeline data: sources, news items, posts, users, and user-post assignments.
+Async repository for news pipeline data.
+
+Provides sources, news items, posts, users, and user-post assignments.
 Uses SQLAlchemy async sessions; each method manages its own session unless documented otherwise.
 """
 from __future__ import annotations
@@ -22,6 +24,7 @@ logger = get_logger(__name__)
 class NewsRepository:
     """
     Async repository for sources, news items, posts, users, and user-post links.
+
     All methods use their own database session (get_db) and commit/rollback internally.
     """
 
@@ -286,6 +289,18 @@ class NewsRepository:
             await db.commit()
         logger.debug(f"Marked post as generated: post_id={post_id}")
 
+    async def mark_post_failed(self, post_id: int) -> None:
+        """Set the post status to FAILED. No-op if post not found."""
+        async with get_db() as db:
+            result = await db.execute(select(Post).where(Post.id == post_id))
+            post = result.scalars().one_or_none()
+            if post is None:
+                logger.warning(f"Post not found for mark_post_failed: post_id={post_id}")
+                return
+            post.status = PostStatus.FAILED
+            await db.commit()
+        logger.debug(f"Marked post as failed: post_id={post_id}")
+
     async def mark_posts_processed(self, posts: list[Post]) -> None:
         """Set status to PROCESSED for all given posts."""
         post_ids = [p.id for p in posts]
@@ -343,7 +358,11 @@ class NewsRepository:
             await self.create_users_post(user, post)
 
     async def get_new_users_posts(self) -> list[UsersPost]:
-        """Return user-post assignments with status NEW, with user, post, news, and source loaded."""
+        """
+        Return user-post assignments with status NEW.
+
+        Eagerly loads user, post, news, source, and source categories.
+        """
         async with get_db() as db:
             result = await db.execute(
                 select(UsersPost)

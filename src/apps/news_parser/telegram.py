@@ -1,3 +1,4 @@
+"""Telegram channel parser: fetch messages and normalize to RawNews/NewsItem."""
 import re
 
 from telethon.tl.types import Message
@@ -21,7 +22,10 @@ def _normalize_channel(channel: str) -> str:
 
 
 class TelegramParser(BaseParser):
+    """Parse a Telegram channel into raw news items."""
+
     def __init__(self, source_name: str, channel: str, limit: int = 10):
+        """Initialize with source name, channel identifier, and message limit."""
         super().__init__(source_name)
         self.channel = _normalize_channel(channel)
         self.limit = limit

@@ -1,3 +1,4 @@
+"""Database engine, session factories, and context managers for async and sync access."""
 from contextlib import asynccontextmanager, contextmanager
 from typing import AsyncGenerator, Generator
 
@@ -39,16 +40,19 @@ SessionLocal: sessionmaker = sessionmaker(
 
 
 async def init_db() -> None:
+    """Create all tables defined in Base.metadata."""
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
 async def close_db() -> None:
+    """Dispose of the async engine and its connection pool."""
     await async_engine.dispose()
 
 
 @asynccontextmanager
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Yield an async session; caller must not use it after context exit."""
     if AsyncSessionLocal is None:
         raise RuntimeError("Database is not initialized")
 
@@ -58,6 +62,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 @contextmanager
 def get_db_sync() -> Generator[Session, None, None]:
+    """Yield a sync session; caller must not use it after context exit."""
     if SessionLocal is None:
         raise RuntimeError("Database is not initialized")
 
@@ -66,6 +71,7 @@ def get_db_sync() -> Generator[Session, None, None]:
 
 
 async def get_db_depends() -> AsyncGenerator[AsyncSession, None]:
+    """Yield an async session for FastAPI dependency injection; rollback on exception."""
     if AsyncSessionLocal is None:
         raise RuntimeError("Database is not initialized")
 
@@ -80,6 +86,7 @@ async def get_db_depends() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def reset_db() -> None:
+    """Drop and recreate all tables (for tests)."""
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)

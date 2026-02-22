@@ -1,5 +1,6 @@
 """
 Cache of already-seen news items per source.
+
 Checked before DB write to avoid redundant IntegrityError and DB round-trips.
 """
 from __future__ import annotations
@@ -29,6 +30,7 @@ def _fingerprint(title: str | None, raw_text: str | None, url: str) -> str:
 
 
 def _cache_key(source_id: int) -> str:
+    """Return Redis key for the seen-items set of the given source."""
     return f"{KEY_PREFIX}:{source_id}"
 
 
@@ -58,7 +60,7 @@ class NewsSeenCache:
         url: str,
         source_message_id: int | None = None,
     ) -> bool:
-        """True if an item with this fingerprint was already processed for this source."""
+        """Return True if an item with this fingerprint was already processed for this source."""
         key = _cache_key(source_id)
         fp = _item_fingerprint(source_message_id, title, raw_text, url)
         return bool(await self._redis.sismember(key, fp))
@@ -71,7 +73,7 @@ class NewsSeenCache:
         url: str,
         source_message_id: int | None = None,
     ) -> None:
-        """Add item fingerprint to cache. TTL is set only when the key is created."""
+        """Add item fingerprint to cache; TTL is set only when the key is created."""
         key = _cache_key(source_id)
         fp = _item_fingerprint(source_message_id, title, raw_text, url)
         await self._redis.sadd(key, fp)
@@ -85,7 +87,8 @@ class NewsSeenCache:
     ) -> list[Any]:
         """
         Return only items whose fingerprint is not in cache (batch via pipeline).
-        Each item must have: title, raw_text, url, source_message_id (optional).
+
+        Each item must have title, raw_text, url, and optionally source_message_id.
         """
         if not items:
             return []
@@ -112,7 +115,8 @@ class NewsSeenCache:
     ) -> None:
         """
         Add fingerprints of all items to cache in one pipeline.
-        Each item must have: title, raw_text, url, source_message_id (optional).
+
+        Each item must have title, raw_text, url, and optionally source_message_id.
         """
         if not items:
             return

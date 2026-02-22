@@ -1,3 +1,4 @@
+"""Seed categories and sources from CSV files into the database."""
 import asyncio
 import csv
 import logging

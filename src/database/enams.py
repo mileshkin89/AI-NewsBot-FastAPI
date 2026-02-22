@@ -1,3 +1,4 @@
+"""Enums for source type, news item status, post status, and user-post status."""
 from enum import Enum
 
 

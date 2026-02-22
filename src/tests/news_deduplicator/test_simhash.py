@@ -1,6 +1,7 @@
 """
-Unit tests for SimHash (compute_simhash, hamming_distance, simhash_to_db)
-and threshold-based duplicate detection using test text pairs for distances 1–7.
+Unit tests for SimHash (compute_simhash, hamming_distance, simhash_to_db).
+
+Include threshold-based duplicate detection using test text pairs for distances 1–7.
 """
 
 import pytest

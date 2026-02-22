@@ -26,8 +26,9 @@ def categories_keyboard(
         selected_ids: set[int],
 ) -> InlineKeyboardMarkup:
     """
-    Build an inline keyboard: one button per category (with checkmark if selected),
-    plus Apply and Reset buttons.
+    Build an inline keyboard for category selection.
+
+    One button per category (with checkmark if selected), plus Apply and Reset.
 
     Args:
         categories: List of objects with .id and .name (Category or SimpleNamespace).
@@ -58,8 +59,10 @@ def categories_keyboard(
 @router.message(F.text == "/categories")
 async def cmd_categories(message: Message, state: FSMContext) -> None:
     """
-    Handle /categories: show category selection keyboard with current user subscriptions.
-    Loads enabled categories and user's selected ids, stores them in FSM state.
+    Handle /categories command.
+
+    Show category selection keyboard with current user subscriptions.
+    Load enabled categories and user's selected ids; store them in FSM state.
     """
     async with get_db() as db:
         users_repo = UserRepository(db)
@@ -111,7 +114,9 @@ async def toggle_category(cb: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(F.data == "categories_apply")
 async def apply_categories(cb: CallbackQuery, state: FSMContext) -> None:
     """
-    Handle Apply: persist selected category ids for the user and clear FSM state.
+    Handle Apply button.
+
+    Persist selected category ids for the user and clear FSM state.
     """
     data = await state.get_data()
     selected_ids = set(data.get("selected", []))
@@ -140,7 +145,9 @@ async def apply_categories(cb: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(F.data == "categories_reset")
 async def reset_categories(cb: CallbackQuery, state: FSMContext) -> None:
     """
-    Handle Reset: toggle between all selected and none; update keyboard and state.
+    Handle Reset button.
+
+    Toggle between all selected and none; update keyboard and state.
     """
     data = await state.get_data()
     all_categories = data.get("all_categories", [])

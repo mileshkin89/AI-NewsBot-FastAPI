@@ -1,3 +1,9 @@
+"""
+Background tasks for the news pipeline.
+
+Parse sources, deduplicate by SimHash, create and generate posts,
+assign posts to users, and publish to Telegram with per-user delay.
+"""
 import asyncio
 from collections import defaultdict
 
@@ -19,7 +25,11 @@ simhash_deduplicator = SimhashDeduplicator()
 
 
 async def _process_one_source(source, cache: NewsSeenCache | None) -> None:
-    """Parse one source, primary dedup via cache, save news_items with status=NEW (no SimHash yet)."""
+    """
+    Parse one source; primary dedup via cache; save news_items with status NEW.
+
+    SimHash is not computed yet (done later by deduplicate_news_items).
+    """
     news_items = []
     try:
         parser = get_parser(source, limit=settings.NEWS_PARSE_LIMIT)
@@ -52,6 +62,7 @@ async def _process_one_source(source, cache: NewsSeenCache | None) -> None:
 
 
 async def parse_news_items():
+    """Run parsing cycle: fetch enabled sources, filter unseen, create news items."""
     logger.info("Starting parsing cycle task")
 
     while True:
@@ -78,7 +89,11 @@ async def parse_news_items():
 
 
 async def deduplicate_news_items():
-    """Process news_items with status=NEW: set simhash, is_duplicate, duplicate_of_id, status=DEDUPLICATED."""
+    """
+    Process news_items with status NEW.
+
+    Set simhash, is_duplicate, duplicate_of_id and status DEDUPLICATED.
+    """
     await asyncio.sleep(5)
     logger.info("SimHash deduplication task started")
 
@@ -118,6 +133,7 @@ async def deduplicate_news_items():
 
 
 async def create_posts():
+    """Create posts for deduplicated news items and link them to news."""
     await asyncio.sleep(8)
     logger.info("Create posts task started")
     while True:
@@ -131,6 +147,7 @@ async def create_posts():
 
 
 async def generate_posts():
+    """Generate post text for pending posts via OpenAI and mark as GENERATED."""
     await asyncio.sleep(12)
     logger.info("Initializing post generator")
     generator = await get_post_generator()
@@ -144,11 +161,12 @@ async def generate_posts():
 
 
 async def _assign_post_to_users(users: list, post) -> None:
-    """Assign one post to all users (bulk insert with single-insert fallback)."""
+    """Assign one post to all users; use bulk insert with single-insert fallback."""
     await repo.create_users_posts_for_post(users, post)
 
 
 async def process_users_posts():
+    """Assign generated posts to users and mark posts as processed."""
     logger.info("Process users posts task started")
     while True:
         users = await repo.get_users()
@@ -165,7 +183,7 @@ async def process_users_posts():
 
 
 def _build_publish_text(u_p) -> str:
-    """Build text for publishing: category name(s) + generated post text."""
+    """Build publish text: category name(s) plus generated post text."""
     base = u_p.post.generated_text or ""
     news = getattr(u_p.post, "news", None)
     source = getattr(news, "source", None) if news else None
@@ -177,7 +195,7 @@ def _build_publish_text(u_p) -> str:
 
 
 async def _publish_one_user_post(u_p):
-    """Publish one user post; exceptions are logged, not raised."""
+    """Publish one user post; log exceptions and do not re-raise."""
     publisher = PostPublisher(chat_id=u_p.user.chat_id)
     try:
         await publisher.publish(text=_build_publish_text(u_p))
@@ -188,7 +206,7 @@ async def _publish_one_user_post(u_p):
 
 
 async def _publish_user_posts_with_delay(user_posts: list):
-    """Publish one user's posts sequentially with delay between each."""
+    """Publish one user's posts sequentially with a delay between each."""
     for i, u_p in enumerate(user_posts):
         await _publish_one_user_post(u_p)
         if i < len(user_posts) - 1:
@@ -196,6 +214,7 @@ async def _publish_user_posts_with_delay(user_posts: list):
 
 
 async def publish_posts():
+    """Publish new user posts to Telegram with per-user delay between messages."""
     logger.info("Publish posts task started")
     while True:
         users_posts = await repo.get_new_users_posts()
