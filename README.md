@@ -242,39 +242,45 @@ Refresh token is stored in an HTTP-only cookie and used by `POST /auth/token/ref
 
 ```
 <project-root>/
-  .env.sample          # Sample env vars; copy to .env and fill in
-  Dockerfile           # Python image, deps, app copy (for docker compose)
-  docker-compose.yml   # Services: web, db, redis, migrator
-  Makefile             # build, up, down, migrate, seed-sources, create_superadmin, etc.
-  pyproject.toml       # Project metadata and dependencies
-  uv.lock              # Locked dependency versions (uv)
-  init.sql             # Optional PostgreSQL init (docker-entrypoint-initdb.d)
-  README.md            # This file
+  .env.sample              # Sample env vars; copy to .env and fill in
+  Dockerfile               # Python image, deps, app copy (for docker compose)
+  docker-compose.yml       # Services: web, db, redis, migrator
+  Makefile                 # build, up, down, migrate, seed-sources, create_superadmin, etc.
+  pyproject.toml           # Project metadata and dependencies
+  uv.lock                  # Locked dependency versions (uv)
+  init.sql                 # Optional PostgreSQL init (docker-entrypoint-initdb.d)
+  README.md                # This file
 
-  commands/            # Shell scripts for Docker/make (run_migration, seed_sources, etc.)
-  data/                # CSV for initial seed: categories.csv, sources.csv
-  prompts/             # Generator prompts: system.txt, user.txt (editable without code change)
-  logs/                # App log file (e.g. app.log); created at runtime
-  sessions/            # Telethon session files (*.session); created after telethon_login
+  commands/                # Shell scripts for Docker/make (run_migration, seed_sources, etc.)
+  data/                    # CSV for initial seed: categories.csv, sources.csv
+  prompts/                 # Generator prompts: system.txt, user.txt (editable without code change)
+  logs/                    # App log file (e.g. app.log); created at runtime
+  sessions/                # Telethon session files (*.session); created after telethon_login
 
-  src/                 # Application code
-    main.py            # FastAPI app, lifespan, mounts routers and starts bot loop
-    main_handler.py    # Background tasks: parse, deduplicate, create/generate posts, publish
-    settings.py        # Pydantic settings from env
-    logging_config.py  # Logger setup
-    database/          # Models, repository, migrations, db connection
+  src/                     # Application code
+    main.py                # FastAPI app, lifespan, mounts routers and starts bot loop
+    settings.py            # Pydantic settings from env
+    logging_config.py      # Logger setup
+    handlers/              # Background pipeline tasks (parse, deduplicate, create/generate posts, publish)
+      parse_news.py        # Parse sources, filter unseen, create news items
+      deduplicate_news.py  # SimHash dedup, set status DEDUPLICATED
+      create_posts.py      # Create posts for deduplicated items
+      generate_posts.py    # OpenAI text generation, mark GENERATED
+      process_users_posts.py  # Assign posts to users, mark processed
+      publish_posts.py     # Publish to Telegram with per-user delay
+    database/              # Models, repository, migrations, db connection
     apps/
       api/
-        apps_api/      # Public API: categories, sources, users, posts
-        admin/         # Admin users management
-        auth/          # JWT login, refresh, logout
-      tg_bot/          # Aiogram handlers: /start, /categories, publisher
-      news_parser/     # Parsers (Telegram, site), factory, schemas
-      news_deduplicator/  # SimHash, cache, text normalizer
-      post_generator/   # OpenAI client usage, prompts, PostGenerationService
-    infrastructure/    # OpenAI client, Redis, Telethon, Aiogram bot instance
-    scripts/           # telethon_login, create_superadmin, seed_sources, clean_sources
-    tests/             # Pytest and API/unit tests
+        apps_api/          # Public API: categories, sources, users, posts
+        admin/             # Admin users management
+        auth/              # JWT login, refresh, logout
+      tg_bot/              # Aiogram handlers: /start, /categories, publisher
+      news_parser/         # Parsers (Telegram, site), factory, schemas
+      news_deduplicator/   # SimHash, cache, text normalizer
+      post_generator/      # OpenAI client usage, prompts, PostGenerationService
+    infrastructure/        # OpenAI client, Redis, Telethon, Aiogram bot instance
+    scripts/               # telethon_login, create_superadmin, seed_sources, clean_sources
+    tests/                 # Pytest and API/unit tests
 ```
 
 ## 🧪 Development and testing
@@ -373,12 +379,4 @@ For website parsing there is a **base class** (`apps/news_parser/base.py` — `B
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-
-Copyright (c) 2025 mileshkin89
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-The full license text is available in the LICENSE file.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
