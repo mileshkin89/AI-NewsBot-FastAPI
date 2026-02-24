@@ -10,6 +10,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         gcc \
         libpq-dev \
+        dos2unix \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,3 +21,5 @@ RUN pip install --no-cache-dir --upgrade pip \
     && uv pip install -r pyproject.toml --system
 
 COPY . /app
+
+RUN dos2unix /app/commands/*.sh
