@@ -1,11 +1,14 @@
 """SQLAlchemy models for sources, categories, news items, posts, users, and admins."""
 from datetime import datetime
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import DateTime, String, Boolean, BigInteger, ForeignKey, func, UniqueConstraint, Table, Column, Index
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SAEnum
 
 from database.enams import SourceType, PostStatus, NewsItemStatus, UsersPostStatus
+
+EMBEDDING_DIMENSION = 1536
 
 
 class Base(DeclarativeBase):
@@ -93,6 +96,13 @@ class NewsItem(Base):
         UniqueConstraint("title", "source_id", name="uq_news_title_source"),
         Index("ix_news_items_simhash", "simhash"),
         Index("ix_news_items_created_at", "created_at"),
+        Index(
+            "ix_news_items_embedding",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_with={"m": 16, "ef_construction": 64},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
@@ -102,6 +112,9 @@ class NewsItem(Base):
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     simhash: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    embedding: Mapped[list[float] | None] = mapped_column(
+        Vector(EMBEDDING_DIMENSION), nullable=True,
+    )
     is_duplicate: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     duplicate_of_id: Mapped[int | None] = mapped_column(
         ForeignKey("news_items.id"),

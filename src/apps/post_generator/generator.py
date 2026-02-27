@@ -2,7 +2,7 @@
 from logging_config import get_logger
 
 from apps.post_generator.prompt_loader import get_prompts
-from infrastructure.openai import OpenAIClient, get_open_ai_client
+from infrastructure.openai_llm import OpenAILLMClient, get_open_ai_llm_client
 from database.repository import NewsRepository
 
 logger = get_logger(__name__)
@@ -10,16 +10,16 @@ logger = get_logger(__name__)
 
 async def get_post_generator() -> 'PostGenerator':
     """Return a PostGenerator wired to the shared OpenAI client."""
-    client: OpenAIClient = get_open_ai_client
+    client: OpenAILLMClient = get_open_ai_llm_client
     return PostGenerator(client)
 
 
 class PostGenerator:
     """Generate post text from raw news using OpenAI."""
 
-    def __init__(self, client: OpenAIClient):
+    def __init__(self, client: OpenAILLMClient):
         """Initialize with the OpenAI client used for completion."""
-        self.client: OpenAIClient = client
+        self.client: OpenAILLMClient = client
 
     async def generate_text(
             self,

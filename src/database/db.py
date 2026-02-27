@@ -2,7 +2,7 @@
 from contextlib import asynccontextmanager, contextmanager
 from typing import AsyncGenerator, Generator
 
-from sqlalchemy import create_engine, Engine
+from sqlalchemy import create_engine, Engine, text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -40,8 +40,9 @@ SessionLocal: sessionmaker = sessionmaker(
 
 
 async def init_db() -> None:
-    """Create all tables defined in Base.metadata."""
+    """Enable required PostgreSQL extensions and create all tables."""
     async with async_engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.create_all)
 
 

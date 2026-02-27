@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:17.4
+    image: pgvector/pgvector:pg17
     hostname: db
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -68,8 +68,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - .:/app
     env_file:
       - .env
     environment:

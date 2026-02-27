@@ -7,7 +7,7 @@ from settings import settings
 logger = get_logger(__name__)
 
 
-class OpenAIClient:
+class OpenAILLMClient:
     """Asynchronous client for the OpenAI Assistants API."""
 
     def __init__(self, openai_api_key: str, model: str, temperature: float):
@@ -73,7 +73,7 @@ class OpenAIClient:
         return response
 
 
-get_open_ai_client = OpenAIClient(
+get_open_ai_llm_client = OpenAILLMClient(
     openai_api_key=settings.OPENAI_API_KEY,
     model=settings.OPENAI_API_MODEL,
     temperature=settings.OPENAI_API_MODEL_TEMPERATURE

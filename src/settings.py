@@ -57,6 +57,13 @@ class Settings(BaseSettings):
     # (more items marked duplicate; more rephrasing / word changes still count as same).
     SIMHASH_DEDUP_THRESHOLD: int = 5
 
+    # Semantic dedup (pgvector): embedding model and similarity threshold
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    # Max cosine similarity (0.0–1.0) to treat two items as semantic duplicates.
+    # Higher = stricter (only very similar texts are duplicates).
+    SEMANTIC_DEDUP_THRESHOLD: float = 0.92
+    SEMANTIC_DEDUP_LOOKBACK_HOURS: int = 24
+
     PASSWORD_HASH_SCHEME: str = "argon2"
 
     # JWT
