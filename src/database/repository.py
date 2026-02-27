@@ -175,7 +175,7 @@ class NewsRepository:
                     simhash=simhash_to_db(simhash),
                     is_duplicate=is_duplicate,
                     duplicate_of_id=duplicate_of_id,
-                    status=NewsItemStatus.DEDUPLICATED,
+                    status=NewsItemStatus.SIMHASH_DEDUPLICATED,
                 )
             )
             await db.commit()
@@ -192,17 +192,63 @@ class NewsRepository:
         logger.debug(f"Fetched {len(items)} new news items")
         return items
 
-    async def get_deduplicated_items(self) -> list[NewsItem]:
+    async def update_news_item_vector_dedup_result(
+            self,
+            news_item_id: int,
+            embedding: list[float],
+            is_duplicate: bool,
+            duplicate_of_id: int | None,
+    ) -> None:
+        """
+        Update a news item with vector deduplication result.
+
+        Stores the embedding, updates is_duplicate / duplicate_of_id,
+        and sets status to VECTOR_DEDUPLICATED.
+        """
+        async with get_db() as db:
+            await db.execute(
+                update(NewsItem)
+                .where(NewsItem.id == news_item_id)
+                .values(
+                    embedding=embedding,
+                    is_duplicate=is_duplicate,
+                    duplicate_of_id=duplicate_of_id,
+                    status=NewsItemStatus.VECTOR_DEDUPLICATED,
+                )
+            )
+            await db.commit()
+        logger.debug(f"Updated vector dedup result for news_item_id={news_item_id}")
+
+    async def get_simhash_deduplicated_items(self) -> list[NewsItem]:
         """
         Return news items that passed deduplication and are unique (eligible for post creation).
 
-        Filters by status=DEDUPLICATED and is_duplicate=False.
+        Filters by status=SIMHASH_DEDUPLICATED and is_duplicate=False.
         """
         async with get_db() as db:
             result = await db.execute(
                 select(NewsItem)
                 .where(
-                    NewsItem.status == NewsItemStatus.DEDUPLICATED,
+                    NewsItem.status == NewsItemStatus.SIMHASH_DEDUPLICATED,
+                    NewsItem.is_duplicate.is_(False),
+                )
+            )
+            items = result.scalars().all()
+        logger.debug(f"Fetched {len(items)} deduplicated items")
+        return items
+
+    async def get_vector_deduplicated_items(self) -> list[NewsItem]:
+        """
+        Return news items that passed vector deduplication and are not duplicates.
+
+        Eligible for post creation. Filters by status=VECTOR_DEDUPLICATED and
+        is_duplicate=False.
+        """
+        async with get_db() as db:
+            result = await db.execute(
+                select(NewsItem)
+                .where(
+                    NewsItem.status == NewsItemStatus.VECTOR_DEDUPLICATED,
                     NewsItem.is_duplicate.is_(False),
                 )
             )

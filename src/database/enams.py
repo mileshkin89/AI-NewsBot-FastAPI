@@ -9,7 +9,8 @@ class SourceType(str, Enum):
 
 class NewsItemStatus(str, Enum):
     NEW = "new"
-    DEDUPLICATED = "deduplicated"
+    SIMHASH_DEDUPLICATED = "simhash_deduplicated"
+    VECTOR_DEDUPLICATED = "vector_deduplicated"
     PROCESSED = "processed"
     FAILED = "failed"
 

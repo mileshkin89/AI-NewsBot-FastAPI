@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 set -e
 
 ALEMBIC_CONFIG="/app/alembic.ini"

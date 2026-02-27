@@ -19,7 +19,8 @@ from apps.tg_bot import start, categories
 from apps.tg_bot.menu import set_commands
 from handlers import (
     parse_news_items,
-    deduplicate_news_items,
+    deduplicate_news_items_simhash,
+    deduplicate_news_items_vector,
     create_posts,
     generate_posts,
     publish_posts,
@@ -53,12 +54,13 @@ async def main():
     logger.info("Prompts from files loaded")
 
     tasks = [
-        # asyncio.create_task(parse_news_items()),
-        # asyncio.create_task(deduplicate_news_items()),
-        # asyncio.create_task(create_posts()),
-        # asyncio.create_task(generate_posts()),
-        # asyncio.create_task(process_users_posts()),
-        # asyncio.create_task(publish_posts()),
+        asyncio.create_task(parse_news_items()),
+        asyncio.create_task(deduplicate_news_items_simhash()),
+        asyncio.create_task(deduplicate_news_items_vector()),
+        asyncio.create_task(create_posts()),
+        asyncio.create_task(generate_posts()),
+        asyncio.create_task(process_users_posts()),
+        asyncio.create_task(publish_posts()),
     ]
     for t in tasks:
         t.add_done_callback(_log_task_exception)

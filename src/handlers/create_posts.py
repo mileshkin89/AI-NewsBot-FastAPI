@@ -23,7 +23,7 @@ async def create_posts() -> None:
     await asyncio.sleep(8)
     logger.info("Create posts task started")
     while True:
-        items = await repo.get_deduplicated_items()
+        items = await repo.get_vector_deduplicated_items()
         if items:
             logger.info(f"Creating posts for {len(items)} deduplicated items")
         for item in items:
