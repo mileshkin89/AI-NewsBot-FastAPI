@@ -1,6 +1,6 @@
 # AI NewsBot (FastAPI)
 
-Telegram bot that aggregates news from configured sources (Telegram channels and websites), deduplicates them with SimHash, generates post text via OpenAI, and delivers personalized digests to users. Includes a REST API for managing sources, categories, users, and posts.
+Telegram bot that aggregates news from configured sources (Telegram channels and websites), deduplicates them in two stages (SimHash + semantic vector similarity), generates post text via OpenAI, and delivers personalized digests to users. Includes a REST API for managing sources, categories, users, and posts.
 
 ## ✨ Table of Contents
 
@@ -21,16 +21,16 @@ Telegram bot that aggregates news from configured sources (Telegram channels and
 ## ✨ Features
 
 - **News aggregation**: Parse Telegram channels (Telethon) and websites (CSS selectors).
-- **Deduplication**: Redis cache for “already seen” per source; SimHash (64-bit) for near-duplicate detection within a configurable time window.
-- **AI generation**: OpenAI Responses API to turn raw news into short posts (prompts editable via text files).
+- **Two-stage deduplication**: Redis cache for “already seen” per source; **SimHash** (64-bit) for near-duplicate detection; **semantic (vector)** deduplication via OpenAI embeddings and pgvector (cosine similarity) for semantically similar texts.
+- **AI generation**: OpenAI for embeddings (vector dedup) and Responses API to turn raw news into short posts (prompts editable via text files).
 - **Telegram delivery**: Users subscribe by category; posts are sent with a configurable delay between messages per user.
 - **REST API**: FastAPI app with JWT auth; admin and app endpoints for categories, sources, users, and posts.
-- **Background pipeline**: Async tasks for parse → deduplicate → create posts → generate text → assign to users → publish.
+- **Background pipeline**: Async tasks for parse → SimHash deduplicate → vector deduplicate → create posts → generate text → assign to users → publish.
 
 ## 📋 Prerequisites
 
 - Python 3.12+
-- PostgreSQL 17+
+- PostgreSQL 17+ with **pgvector** extension (for semantic deduplication)
 - Redis 7+
 - [Telegram API](https://my.telegram.org) credentials (API ID, API hash) for the parser
 - [OpenAI API key](https://platform.openai.com/api-keys)
@@ -68,9 +68,11 @@ Edit `.env` and fill in:
 | `SECRET_KEY`, `REFRESH_SECRET_KEY` | JWT signing keys (use long random strings in production). |
 | `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS` | Token TTL. |
 
-Optional (defaults in code): `NEWS_PARSE_LIMIT`, `PUBLISH_DELAY_SEC`, `NEWS_SEEN_CACHE_TTL_DAYS`, `SIMHASH_DEDUP_LOOKBACK_HOURS`, `SIMHASH_DEDUP_THRESHOLD`, `OPENAI_API_MODEL`, `PATH_TO_PROMPTS`, `PATH_TO_LOGS`, CSV paths for sources/categories.
+Optional (defaults in code): `NEWS_PARSE_LIMIT`, `PUBLISH_DELAY_SEC`, `NEWS_SEEN_CACHE_TTL_DAYS`, `SIMHASH_DEDUP_LOOKBACK_HOURS`, `SIMHASH_DEDUP_THRESHOLD`, `OPENAI_EMBEDDING_MODEL`, `SEMANTIC_DEDUP_THRESHOLD`, `SEMANTIC_DEDUP_LOOKBACK_HOURS`, `OPENAI_API_MODEL`, `PATH_TO_PROMPTS`, `PATH_TO_LOGS`, CSV paths for sources/categories.
 
 ### 3. Database and migrations
+
+PostgreSQL must have the **pgvector** extension (for semantic deduplication). With Docker, `init.sql` or migrations can enable it; otherwise run `CREATE EXTENSION IF NOT EXISTS vector;` in your database.
 
 With Docker (recommended for first run):
 
@@ -78,7 +80,7 @@ With Docker (recommended for first run):
 make migrate
 ```
 
-Without Docker: ensure PostgreSQL and Redis are running, set `POSTGRES_HOST`/`REDIS_HOST` (e.g. `localhost`), then run migrations from project root with `PYTHONPATH=src` and your env:
+Without Docker: ensure PostgreSQL (with pgvector) and Redis are running, set `POSTGRES_HOST`/`REDIS_HOST` (e.g. `localhost`), then run migrations from project root with `PYTHONPATH=src` and your env:
 
 ```bash
 cd src && alembic upgrade head
@@ -263,12 +265,12 @@ Refresh token is stored in an HTTP-only cookie and used by `POST /auth/token/ref
     logging_config.py      # Logger setup
     handlers/              # Background pipeline tasks (parse, deduplicate, create/generate posts, publish)
       parse_news.py        # Parse sources, filter unseen, create news items
-      deduplicate_news.py  # SimHash dedup, set status DEDUPLICATED
-      create_posts.py      # Create posts for deduplicated items
+      deduplicate_news.py  # SimHash dedup then vector dedup (two tasks)
+      create_posts.py      # Create posts for vector-deduplicated items
       generate_posts.py    # OpenAI text generation, mark GENERATED
       process_users_posts.py  # Assign posts to users, mark processed
       publish_posts.py     # Publish to Telegram with per-user delay
-    database/              # Models, repository, migrations, db connection
+    database/              # Models (incl. embedding column), repository, migrations, db connection
     apps/
       api/
         apps_api/          # Public API: categories, sources, users, posts
@@ -276,9 +278,9 @@ Refresh token is stored in an HTTP-only cookie and used by `POST /auth/token/ref
         auth/              # JWT login, refresh, logout
       tg_bot/              # Aiogram handlers: /start, /categories, publisher
       news_parser/         # Parsers (Telegram, site), factory, schemas
-      news_deduplicator/   # SimHash, cache, text normalizer
+      news_deduplicator/   # SimHash, vector (embedding) dedup, text normalizer
       post_generator/      # OpenAI client usage, prompts, PostGenerationService
-    infrastructure/        # OpenAI client, Redis, Telethon, Aiogram bot instance
+    infrastructure/        # OpenAI client, OpenAI embeddings, Redis, Telethon, Aiogram bot instance
     scripts/               # telethon_login, create_superadmin, seed_sources, clean_sources
     tests/                 # Pytest and API/unit tests
 ```
@@ -342,6 +344,7 @@ For website parsing there is a **base class** (`apps/news_parser/base.py` — `B
 
 ### Database
 - **PostgreSQL** (17.4) - Main relational database (sources, news, posts, users, admins)
+- **pgvector** - Extension for storing and querying embedding vectors (cosine distance); used for semantic deduplication
 - **SQLAlchemy** (>=2.0.46) - Async ORM, sessions, models
 - **asyncpg** (>=0.31.0) - Async PostgreSQL driver
 - **Alembic** (>=1.18.3) - Database migrations
@@ -350,7 +353,7 @@ For website parsing there is a **base class** (`apps/news_parser/base.py` — `B
 - **Redis** (7.4) - Seen-news cache per source (before DB write)
 
 ### AI
-- **OpenAI** (>=2.17.0) - Post text generation (Responses API)
+- **OpenAI** (>=2.17.0) - Embeddings API (for vector deduplication) and Responses API (post text generation)
 
 ### Parsing
 - **Telethon** (>=1.42.0) - Fetch messages from Telegram channels
